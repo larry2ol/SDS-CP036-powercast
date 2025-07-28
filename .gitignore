@@ -1,10 +1,56 @@
-# Include any files you want to ignore (do not want to push to GitHub)
-.ipynb_checkpoints
-.DS_Store
-.env
+# ---------------------------
+# Python bytecode and cache
+# ---------------------------
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
 
-# virtual environments
-venv/
-.venv/
-env/
-ENV/
+# ---------------------------
+# Virtual environments
+# ---------------------------
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+
+# ---------------------------
+# Jupyter Notebook checkpoints
+# ---------------------------
+**/.ipynb_checkpoints/
+
+# ---------------------------
+# macOS system files
+# ---------------------------
+**/.DS_Store
+
+# ---------------------------
+# Environment & credentials
+# ---------------------------
+**/.env
+**/.env.*
+
+# ---------------------------
+# VS Code settings
+# ---------------------------
+**/.vscode/
+**/*.code-workspace
+
+# ---------------------------
+# Dev container configs
+# ---------------------------
+**/.devcontainer/
+
+# ---------------------------
+# Experiment tracking and logs
+# ---------------------------
+**/mlruns/
+**/*.log
+
+# ---------------------------
+# Common data and artifact files
+# ---------------------------
+**/*.csv
+**/*.tsv
+**/*.parquet
+**/data/
+**/output/
