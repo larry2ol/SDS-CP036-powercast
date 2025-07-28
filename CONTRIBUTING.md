@@ -1,118 +1,143 @@
 ## Contributing to the Project
 
-Thank you for your interest in contributing to this project! There are two main ways to contribute:
+Thank you for your interest in contributing to this project! There are two main tracks to contribute to:
 
-1. **Project Team Members**: If you are part of the project team, you will submit your work in the `submissions-team/` directory.
-2. **Community Members**: If you are not a project team member but still want to contribute, you can submit your work in the `submissions-community/` directory.
+1. **Beginner Track** – located in the `beginner/` folder
+2. **Advanced Track** – located in the `advanced/` folder
+
+Each track supports contributions from:
+
+* **Project Team Members**: If you're officially on the team
+* **Community Contributors**: Anyone from the broader SDS community
+
+---
 
 ## Contribution Guidelines
 
 ### 1. Verify Git Installation
-Make sure that you have git installed by running the following command in your terminal.
+
+Make sure that you have Git installed:
 
 ```bash
 git --version
 ```
 
 ### 2. Fork the Repository
-First, you need to fork the repository to your GitHub account. You can do this by clicking the `Fork` button at the top right of the repository page.
+
+Fork the repository to your GitHub account using the `Fork` button in the top-right of this page.
 
 ### 3. Clone the Repository
-After forking, clone your forked repository to your local machine using the following command:
+
+Once forked, clone your copy to your local machine:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/PROJECT_NAME.git
-```
-
-Replace `YOUR_USERNAME` with your GitHub username and `PROJECT_NAME` with the name of the repository.
-
-Navigate to the project directory:
-
-```bash
-cd PROJECT_NAME
+git clone https://github.com/YOUR_USERNAME/SDS-CP037-powercast.git
+cd SDS-CP037-powercast
 ```
 
 ### 4. Set Up a Virtual Environment
-To ensure a clean and consistent environment, set up a virtual environment using either Python's built-in `venv` module or Anaconda.
 
-#### Using Python Virtual Environment
+Use Python `venv` or Anaconda to create a clean environment.
+
+#### Python venv
+
 ```bash
 python -m venv venv
-source venv/bin/activate  # On macOS/Linux
-venv\Scripts\activate    # On Windows
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate    # Windows
 ```
-To install dependencies, run:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-#### Using Anaconda
+#### Anaconda
+
 ```bash
 conda create --name myenv python=3.12
 conda activate myenv
-```
-To install dependencies, run:
-```bash
 pip install -r requirements.txt
 ```
 
-### 5. Add Your Contributions
-#### For Project Team Members
-- Place your submission in the `submissions-team/` directory.
-- Create a new folder with your name inside `submissions-team/`.
-- Add your files inside your personal folder.
+---
 
-**Example Structure:**
+## 📁 Submission Instructions
+
+### ▶️ Beginner Track
+
+Submit to the appropriate folder inside `beginner/submissions/`:
+
+* `team-members/` for official team members
+* `community-contributions/` for external contributors
+
+**Structure Example:**
+
 ```
-submissions/team-members
+beginner/submissions/team-members/
 │── your-name/
-│   ├── data-analysis.py
+│   ├── data-analysis.ipynb
 │   ├── app.py
-│   ├── requirements.txt
+│   └── requirements.txt
 ```
 
-#### For Community Members
-- Place your contribution in the `submissions-community/` directory.
-- Create a new folder with your name inside `submissions-community/`.
-- Add your files inside your personal folder.
+### 🔴 Advanced Track
 
-**Example Structure:**
+Submit to the appropriate folder inside `advanced/submissions/`:
+
+* `team-members/` for official team members
+* `community-contributions/` for external contributors
+
+**Structure Example:**
+
 ```
-submissions/community-contributions/
+advanced/submissions/community-contributions/
 │── your-name/
-│   ├── data-analysis.py
-│   ├── app.py
-│   ├── requirements.txt
+│   ├── model-training.ipynb
+│   ├── api.py
+│   └── requirements.txt
 ```
+
+---
 
 ### 6. Commit and Push Your Changes
-After adding your files, commit your changes with a meaningful commit message:
+
+After adding your files:
 
 ```bash
 git add .
-git commit -m "Added my contribution"
+git commit -m "Added my contribution to beginner track"
 git push origin your-branch-name
 ```
 
 ### 7. Create a Pull Request (PR)
-Once your changes are pushed, go to the original repository on GitHub and follow these steps:
 
-1. Click on the `Pull Requests` tab.
-2. Click `New Pull Request`.
-3. Select your forked repository and the branch you pushed your changes to (main).
-4. Add a title and description for your PR.
-5. Click `Create Pull Request`.
+1. Go to the original SDS repo on GitHub
+2. Click the `Pull Requests` tab > `New Pull Request`
+3. Choose your fork and branch
+4. Write a clear title + description
+5. Click `Create Pull Request`
 
-Your PR will be reviewed, and once approved, it will be merged into the project!
+We’ll review and merge once approved!
+
+---
 
 ### 8. Keep Your Fork Updated
-To keep your fork up-to-date with the original repository:
 
-1. Make sure to sync your fork regualrly so that all changes made to the main branch on the SDS repo are reflected on your fork.
-2. Run ```bash git pull``` to pull down the recent changes from your GitHub account to your local environment.
+Regularly pull the latest changes from the main SDS repo:
 
-A complete tutorial on how to use Git & GitHub can be found on the SDS platform. Below is the link to our GitHub course:
+```bash
+git remote add upstream https://github.com/SuperDataScience/SDS-CP037-powercast.git
+git pull upstream main
+```
 
-https://community.superdatascience.com/c/intro-to-git-github/?preview=true
+---
 
-If you have any questions, feel free to reach out by opening an issue or sending me an email shaheer@superdatascience.com Happy coding!
+### 💡 Resources
+
+If you're new to Git & GitHub, check out our beginner-friendly course:
+
+🔗 [Intro to Git & GitHub – SuperDataScience](https://community.superdatascience.com/c/intro-to-git-github/?preview=true)
+
+If you have questions, open an issue or contact us at [shaheer@superdatascience.com](mailto:shaheer@superdatascience.com).
+
+Happy contributing! 🚀
