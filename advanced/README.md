@@ -18,7 +18,7 @@ You’ll build your models using tools like PyTorch or TensorFlow, experiment wi
 
 ### Week 1: Exploratory Data Analysis (EDA)
 
-* Perform same EDA steps as in the beginner track
+* Perform same EDA steps as in the [beginner track](../beginner/README.md)
 * Investigate autocorrelation, lag relationships, and seasonality
 * Explore feature-target alignment and potential for lookback windows
 
