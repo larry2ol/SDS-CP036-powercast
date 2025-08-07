@@ -1,0 +1,14 @@
+{
+  "timestamp_consistency": {
+    "is_monotonic": false,
+    "irregular_timestamps": "N/A"
+  },
+  "sampling_frequency": {
+    "frequency_minutes": "N/A",
+    "is_consistent": false
+  },
+  "duplicates": {
+    "duplicate_count": 0,
+    "duplicates": []
+  }
+}

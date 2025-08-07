@@ -1,0 +1,42 @@
+{
+  "time_consistency": {
+    "questions": [
+      {
+        "question": "Is the data timestamp consistent?",
+        "answer": "Timestamps are {irregular_timestamps} irregular."
+      }
+    ]
+  },
+  "temporal_trends": {
+    "questions": [
+      {
+        "question": "Are there temporal patterns?",
+        "answer": "Hourly, daily, and weekly patterns analyzed."
+      }
+    ]
+  },
+  "environmental_relationships": {
+    "questions": [
+      {
+        "question": "How do features correlate with consumption?",
+        "answer": "Correlations computed for each zone."
+      }
+    ]
+  },
+  "lag_effects": {
+    "questions": [
+      {
+        "question": "Are there lag effects?",
+        "answer": "Lag correlations analyzed up to 24 hours."
+      }
+    ]
+  },
+  "data_quality": {
+    "questions": [
+      {
+        "question": "Are there outliers?",
+        "answer": "{outlier_count} columns have outliers: {outlier_details}"
+      }
+    ]
+  }
+}
