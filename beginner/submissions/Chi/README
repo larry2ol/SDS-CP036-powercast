@@ -1,5 +1,5 @@
 Tetouan City Power Consumption Prediction
-This project predicts power consumption for three zones in Tetouan City using machine learning models, based on the dataset Tetuan City power consumption.csv. It includes a Jupyter notebook for data analysis and model training, and a Streamlit app for visualizations and predictions.
+This project predicts power consumption for three zones in Tetouan City using machine learning models, based on the dataset Tetuan City power consumption.csv. It includes a data analysis and model training, and a Streamlit app for visualizations and predictions.
 Project Structure
 your-name/
 ├── data/
