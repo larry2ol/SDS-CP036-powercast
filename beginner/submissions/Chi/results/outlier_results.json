@@ -1,0 +1,34 @@
+{
+  "Temperature": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "Humidity": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "Wind_Speed": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "general_diffuse_flows": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "diffuse_flows": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "Zone_1_Power_Consumption": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "Zone_2_Power_Consumption": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  },
+  "Zone_3_Power_Consumption": {
+    "outlier_count": 0,
+    "outlier_indices": []
+  }
+}
