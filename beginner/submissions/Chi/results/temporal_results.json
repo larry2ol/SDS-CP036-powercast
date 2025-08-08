@@ -1,0 +1,44 @@
+{
+  "hourly": {
+    "Zone_1_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    },
+    "Zone_2_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    },
+    "Zone_3_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    }
+  },
+  "daily": {
+    "Zone_1_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    },
+    "Zone_2_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    },
+    "Zone_3_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    }
+  },
+  "weekly": {
+    "Zone_1_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    },
+    "Zone_2_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    },
+    "Zone_3_Power_Consumption": {
+      "mean": {},
+      "std": {}
+    }
+  }
+}
