@@ -1,0 +1,23 @@
+{
+  "Zone_1_Power_Consumption": {
+    "Temperature": "N/A",
+    "Humidity": "N/A",
+    "Wind_Speed": "N/A",
+    "general_diffuse_flows": "N/A",
+    "diffuse_flows": "N/A"
+  },
+  "Zone_2_Power_Consumption": {
+    "Temperature": "N/A",
+    "Humidity": "N/A",
+    "Wind_Speed": "N/A",
+    "general_diffuse_flows": "N/A",
+    "diffuse_flows": "N/A"
+  },
+  "Zone_3_Power_Consumption": {
+    "Temperature": "N/A",
+    "Humidity": "N/A",
+    "Wind_Speed": "N/A",
+    "general_diffuse_flows": "N/A",
+    "diffuse_flows": "N/A"
+  }
+}
