@@ -18,9 +18,11 @@ def scale_features(train_df, test_df, target_col):
             df[col] = pd.to_numeric(df[col], errors='coerce')
             df[col] = df[col].replace([np.inf, -np.inf], np.nan)
 
+    extra_numeric_cols = ['Temperature', 'Humidity', 'Wind Speed', 'general diffuse flows', 'diffuse flows']
     num_cols = [col for col in train_df[feature_cols].select_dtypes(include='number').columns 
                 if 'Power Consumption' in col and ('lag' in col or 'roll' in col)
-                or col in ['hour', 'month', 'weekday', 'is_weekend']]
+                or col in ['hour', 'month', 'weekday', 'is_weekend']
+                or col in extra_numeric_cols]
 
     scaler = StandardScaler()
 

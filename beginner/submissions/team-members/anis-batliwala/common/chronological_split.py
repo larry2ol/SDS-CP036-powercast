@@ -20,9 +20,16 @@ def chronological_train_test_split(df, split_ratio=0.8):
   test : pd.DataFrame
       The test set (remaining portion of the data).
   """
+  if not 0 < split_ratio < 1:
+    raise ValueError("split_ratio must be between 0 and 1")
+
+  if 'DateTime' in df.columns:
+    df = df.sort_values('DateTime')
+
   split_idx = int(len(df) * split_ratio)
   # Ensure the test set is a copy to avoid SettingWithCopyWarning
   train = df.iloc[:split_idx].copy()
   # Ensure the test set is a copy to avoid SettingWithCopyWarning
   test = df.iloc[split_idx:].copy()
+  
   return train, test
