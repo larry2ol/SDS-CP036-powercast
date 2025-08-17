@@ -58,3 +58,12 @@ checkpoints/
 .ruff_cache/
 .pytest_cache/
 
+# Week 2 generated artifacts
+assets/prepared_sequences/
+assets/scalers/
+splits/
+
+# Torch / TensorFlow caches
+.dataloader_cache/
+.dl_cache/
+.tf_cache/

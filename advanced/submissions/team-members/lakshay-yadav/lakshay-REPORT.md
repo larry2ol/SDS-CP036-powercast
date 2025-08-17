@@ -95,56 +95,56 @@ A: Retention preserves rare events but may affect outlier‑sensitive models; ca
 ### 🔄 1. Sequence Construction & Lookback Windows
 
 Q: How did you determine the optimal lookback window size for your sequence models?  
-A:
+A: From Week 1 lag analysis and ACF/PACF. Strong daily cycle (144 steps) plus shorter windows (36, 72) for near-term effects. Horizons set at 6, 12, 36 steps (1–6 h ahead).
 
 Q: What challenges did you face when converting the time-series data into input/output sequences?  
-A:
+A: Ensuring correct alignment between last input step and first target step, handling multi-zone outputs, and managing large memory when generating all lookback/horizon pairs.
 
 Q: How did you handle cases where the lookback window extended beyond the available data?  
-A:
+A: Computed n_samples = len − lookback − horizon + 1 and discarded invalid windows.
 
 ---
 
 ### ⚖️ 2. Feature Scaling & Transformation
 
 Q: Which normalization or standardization techniques did you apply to the features, and why?  
-A:
+A: StandardScaler (zero-mean, unit-variance) for all numeric features; improves training stability across variables with different scales.
 
 Q: Did you engineer any cyclical time features (e.g., sine/cosine transforms for hour or day)? How did these impact model performance?  
-A:
+A: Yes. Added hour-sin/cos and weekday-sin/cos. They capture cyclic behavior without discontinuities and improved validation loss.
 
 Q: How did you address potential data leakage during scaling or transformation?  
-A:
+A: Scalers fit on training split only and applied to validation/test. Targets left unscaled (or scaled separately when required).
 
 ---
 
 ### 🧩 3. Data Splitting & Preparation
 
 Q: How did you split your data into training, validation, and test sets to ensure temporal integrity?  
-A:
+A: Chronological split: 70% train, 15% validation, 15% test.
 
 Q: What considerations did you make to prevent information leakage between splits?  
-A:
+A: No shuffling; windows generated after splitting; scalers fit on train only.
 
 Q: How did you format your data for use with PyTorch DataLoader or TensorFlow tf.data.Dataset?  
-A:
+A: Converted arrays to tensors (X: [N, lookback, features], y: [N, horizon, targets]) and wrapped in TensorDataset + DataLoader with batch size 64.
 
 ---
 
 ### 📈 4. Feature-Target Alignment
 
 Q: How did you align your input features and target variables for sequence-to-one or sequence-to-sequence forecasting?  
-A:
+A: Defined X = values[i:i+lookback], y = values[i+lookback:i+lookback+horizon] with target indices. Ensures last input step directly precedes first target step.
 
 Q: Did you encounter any issues with misalignment or shifting of targets? How did you resolve them?  
-A:
+A: Initial off-by-one risks handled with assertions and timestamp checks (max(X_time) = min(y_time) − 1 step).
 
 ---
 
 ### 🧪 5. Data Quality & Preprocessing
 
 Q: What preprocessing steps did you apply to handle missing values or anomalies before modeling?  
-A:
+A: Verified DateTime ordering and 10-min frequency; removed duplicates (none found); flagged outliers via z-score but did not cap/clip.
 
 Q: How did you verify that your data pipeline produces consistent and reliable outputs for model training?  
-A:
+A: Checked deterministic sample counts, validated shapes/dtypes, logged window shapes for each (lookback, horizon), and reloaded saved .npy/scaler artifacts for consistency.
