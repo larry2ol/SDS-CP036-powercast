@@ -1,0 +1,29 @@
+# Core Libraries
+numpy==1.24.4
+pandas==1.5.3
+
+# Visualization
+matplotlib==3.7.1
+seaborn==0.12.2
+plotly==5.15.0
+statsmodels==0.14.2
+
+# Machine Learning
+scikit-learn==1.2.2
+xgboost==1.7.6
+lightgbm==3.3.5
+
+# Experiment Tracking
+mlflow==2.3.2
+
+# Deployment
+streamlit==1.25.0
+
+# Utilities
+python-dotenv==1.0.0
+
+# Deep Learning
+torch==2.0.1
+torchvision==0.15.2
+torchaudio==2.0.2
+tensorboard==2.12.3   # optional
