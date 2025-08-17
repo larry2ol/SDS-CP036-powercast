@@ -1,0 +1,9 @@
+# Auto-derived by Make_Requirements.py
+# Generated: 2025-08-16 01:00:25
+# Scanned patterns: GirishK_PwrCst_Wk1_Section1-Business*.ipynb, GirishK_PwrCst_Wk1_Section*-Business*.ipynb
+
+ipykernel
+jupyterlab
+matplotlib
+numpy
+pandas
