@@ -1,0 +1,69 @@
+# Scope: only affects files under lakshay-yadav/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python caches and local envs
+__pycache__/
+.venv/
+venv/
+env/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Data and generated artifacts inside assets/
+assets/*.csv
+assets/*.xlsx
+assets/*.parquet
+assets/*.feather
+assets/*.zip
+assets/*.gz
+assets/*.png
+assets/*.svg
+assets/*.pdf
+
+# Keep the Phase 1 summary JSON
+!assets/phase1_eda_summary.json
+
+# Keep key plots for README/report
+!assets/power_consumption_trends.png
+!assets/avg_by_hour.png
+!assets/avg_by_dow.png
+!assets/weekday_hour_heatmap_all_zones.png
+!assets/correlation_heatmap.png
+!assets/weather_lag_to_power_heatmap.png
+!assets/zone1_stl.png
+!assets/zone_1_power_consumption_acf_pacf.png
+!assets/zone_2__power_consumption_acf_pacf.png
+!assets/zone_3__power_consumption_acf_pacf.png
+
+# ML artifacts (if any placed here)
+models/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.onnx
+*.joblib
+*.pkl
+*.sav
+
+# Logs / caches / tooling
+*.log
+.cache/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Week 2 generated artifacts
+assets/prepared_sequences/
+assets/scalers/
+splits/
+
+# Torch / TensorFlow caches
+.dataloader_cache/
+.dl_cache/
+.tf_cache/
