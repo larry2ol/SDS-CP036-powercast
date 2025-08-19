@@ -1,10 +1,7 @@
-# SDS-CP036-powercast – Wk01 – Consolidated Business Report (from results/Wk01_CONSOLIDATED)
-_2025-08-15 23:25:52_
-
-# SDS-CP036-powercast — Wk01 Consolidated Business Report (Inline Plots v2)
+# SDS-CP036-powercast — Wk01 Consolidated Business Report
 
 Generated on: 2025-08-15 23:25:52
-Project root: `/home/6376f5a9-d12b-4255-9426-c0091ad440a7/Powercast`
+Project root: `/Powercast`
 
 Includes Sections: 1, 2, 3, 4, 5
 
