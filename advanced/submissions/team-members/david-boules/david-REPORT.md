@@ -63,13 +63,13 @@ A:
 (Not done yet...)
 
 Q: Did you detect any outliers in the weather or consumption readings?
-A:
+A: Yes, there were few outliers in Zone 2, however many detected outliers in Zone 3 (due to the spike in the summer). There
 
 Q: How did you identify and treat these anomalies?
-A:
+A: I applied statistical methods, such as taking Z scores which have an absolute value greater than 3, and the IQR method too. These were validated visually using boxplots and histograms. Since most outliers were explainable (e.g. demand peaks in the summer due to likely higher AC usage, higher temperatures / low humidities in the summer months due to Tetouan being a dry climate), I will leave the values as they are. Deep learning models may be sensitive to outliers, so certain transformations may be applied to handle these extreme values.
 
 Q: What might be the impact of retaining or removing them in your model?
-A:
+A: Removing anomalies will disrupt some of the seasonal nature of the time series (e.g. power consumption peak in Z3), so retaining them will capture the true demand surges and trends of the time series, however may increase variance in error metrics when it comes to model development.
 
 
 
@@ -109,7 +109,7 @@ Q: How did you split your data into training, validation, and test sets to ensur
 A:
 
 Q: What considerations did you make to prevent information leakage between splits?  
-A:
+A: The splits must not be random, they should be sequential. So the train split is from 1/1/17 to 
 
 Q: How did you format your data for use with PyTorch DataLoader or TensorFlow tf.data.Dataset?  
 A:
