@@ -127,3 +127,58 @@ A:
 
 Q: How did you verify that your data pipeline produces consistent and reliable outputs for model training?  
 A:
+
+---
+
+## ✅ Week 3: Neural Network Design & Baseline Training
+
+---
+
+### 🧠 1. Model Architecture & Design
+
+Q: Which neural network architecture(s) did you choose for baseline forecasting (e.g., LSTM, GRU, TCN), and what motivated your selection?  
+A:
+
+Q: How did you structure your input sequences and targets for the chosen model(s)?  
+A:
+
+Q: What considerations did you make regarding the depth, number of units, and activation functions in your network?  
+A:
+
+---
+
+### 🏋️ 2. Training & Experimentation
+
+Q: Which loss function and optimizer did you use for training, and why are they suitable for this task?  
+A:
+
+Q: How did you incorporate regularization techniques such as Dropout or Batch Normalization, and what impact did they have?  
+A:
+
+Q: What challenges did you encounter during training (e.g., overfitting, vanishing gradients), and how did you address them?  
+A:
+
+---
+
+### 📊 3. Evaluation & Metrics
+
+Q: Which metrics did you use to evaluate your model’s performance, and why are they appropriate for time-series forecasting?  
+A:
+
+Q: How did you use MLflow (or another tool) to track your training experiments and results?  
+A:
+
+Q: What insights did you gain from visualizing forecasted vs. actual power consumption for each zone?  
+A:
+
+---
+
+### 🔍 4. Model Interpretation & Insights
+
+Q: How did you interpret the learned patterns or feature importance in your neural network?  
+A:
+
+Q: Did you observe any systematic errors or biases in your model predictions? How did you investigate and address them?  
+A:
+
+Q: What trade-offs did you consider when selecting your final baseline model architecture?
