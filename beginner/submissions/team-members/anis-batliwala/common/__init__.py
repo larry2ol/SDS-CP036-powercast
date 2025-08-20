@@ -6,3 +6,4 @@ from .scale_features import scale_features
 from .chronological_split import chronological_train_test_split
 from .linear_regression import baseline_model_performance
 from .persistence_model import persistence_baseline_performance
+from .sarimax import sarimax_fast
