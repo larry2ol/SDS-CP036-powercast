@@ -130,3 +130,46 @@ A:
 
 Q: How did you validate that your feature engineering and preprocessing pipeline produced consistent and reliable results across different data subsets?  
 A:
+
+---
+
+## ✅ Week 3: Model Development & Experimentation
+
+---
+
+### 🤖 1. Model Selection & Training
+
+Q: Which machine learning models did you choose for forecasting power consumption, and what motivated your selections?  
+A:
+
+Q: How did you structure your models to handle the multi-zone prediction task (separate models vs. multi-output)?  
+A:
+
+Q: What challenges did you encounter during model training, and how did you address them?  
+A:
+
+---
+
+### 📈 2. Experiment Tracking & Evaluation
+
+Q: Which evaluation metrics did you use to assess model performance, and why are they appropriate for this problem?  
+A:
+
+Q: How did you use MLflow (or another tool) to track your experiments and results?  
+A:
+
+Q: What insights did you gain from comparing actual vs. predicted curves for each zone?  
+A:
+
+---
+
+### 🔍 3. Model Interpretation & Insights
+
+Q: How did you interpret feature importance or model coefficients, and what did they reveal about power consumption drivers?  
+A:
+
+Q: Did you observe any systematic errors or biases in your model predictions? How did you investigate and address them?  
+A:
+
+Q: What trade-offs did you consider when selecting your final model(s) for each zone?  
+A:
