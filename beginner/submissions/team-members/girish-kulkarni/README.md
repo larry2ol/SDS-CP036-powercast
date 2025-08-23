@@ -1,60 +1,144 @@
-# SDS-CP036-powercast — Results Overview
+# PowerCast – Project README
 
-📅 **Generated:** 2025-08-18 03:37:38
+_Generated/updated: 2025-08-23 06:15:08_
 
----
+## Week 1 – Key Notebooks & Reports
 
-## Week 2 — Section Reports
+### Time Consistency & Structure
+- Notebook: `GirishK_PwrCst_Wk1_Section1-Business.ipynb`
+- Purpose: Checks timestamp integrity (hourly grid), gaps/overlaps, duplicates.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section1_dev/reports/SDS-CP036-powercast_Wk01_Section1_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section1_preprod/reports/SDS-CP036-powercast_Wk01_Section1_Business_Report.md`
+  - `final` report: `results/Wk01_Section1_final/reports/SDS-CP036-powercast_Wk01_Section1_Business_Report.md`
 
-### Wk02_Section1 — Time-Based Feature Engineering
-- 📊 [Wk02 Section1 Dayofweek Profile](./results/Wk02_Section1/plots/wk02_section1_dayofweek_profile.png)
-- 📊 [Wk02 Section1 Hourly Profile](./results/Wk02_Section1/plots/wk02_section1_hourly_profile.png)
-- 💼 [Wk02 Section1 Business Report](./results/Wk02_Section1/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md)
-### Wk02_Section2 — Lags & Rolling Statistics
-- 📊 [Wk02 Section2 Baseline Mae](./results/Wk02_Section2/plots/wk02_section2_baseline_mae.png)
-- 📊 [Wk02 Section2 Rolling24 Overlay](./results/Wk02_Section2/plots/wk02_section2_rolling24_overlay.png)
-- 💼 [Wk02 Section2 Business Report](./results/Wk02_Section2/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md)
-### Wk02_Section3 — Feature Scaling & Normalization
-- 📊 [Wk02 Section3 Standard Zone 1 Power Consumption Lag1 After](./results/Wk02_Section3/plots/standard_Zone%201%20Power%20Consumption_lag1_after.png)
-- 📊 [Wk02 Section3 Standard Zone 1 Power Consumption Lag1 Before](./results/Wk02_Section3/plots/standard_Zone%201%20Power%20Consumption_lag1_before.png)
-- 💼 [Wk02 Section3 Business Report](./results/Wk02_Section3/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md)
-### Wk02_Section4 — Data Splitting & Preparation
-- 📊 [Wk02 Section4 Split Marker](./results/Wk02_Section4/plots/wk02_section4_split_marker.png)
-- 💼 [Wk02 Section4 Business Report](./results/Wk02_Section4/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md)
-### Wk02_Section5 — Data Quality & Preprocessing
-- 📊 [Wk02 Section5 Missing After Train](./results/Wk02_Section5/plots/missing_after_train.png)
-- 📊 [Wk02 Section5 Missing Before Train](./results/Wk02_Section5/plots/missing_before_train.png)
-- 💼 [Wk02 Section5 Business Report](./results/Wk02_Section5/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md)
+### Temporal Trends & Seasonality
+- Notebook: `GirishK_PwrCst_Wk1_Section2-Business.ipynb`
+- Purpose: Daily/weekly patterns via profiles, heatmaps, rolling trends.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section2_dev/reports/SDS-CP036-powercast_Wk01_Section2_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section2_preprod/reports/SDS-CP036-powercast_Wk01_Section2_Business_Report.md`
+  - `final` report: `results/Wk01_Section2_final/reports/SDS-CP036-powercast_Wk01_Section2_Business_Report.md`
 
----
+### Environmental Feature Relationships
+- Notebook: `GirishK_PwrCst_Wk1_Section3-Business.ipynb`
+- Purpose: Correlation scans with Temperature, Humidity, Wind, Diffuse flows.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section3_dev/reports/SDS-CP036-powercast_Wk01_Section3_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section3_preprod/reports/SDS-CP036-powercast_Wk01_Section3_Business_Report.md`
+  - `final` report: `results/Wk01_Section3_final/reports/SDS-CP036-powercast_Wk01_Section3_Business_Report.md`
 
-## Week 1 — Section Reports
+### Lag Effects & Time Dependency
+- Notebook: `GirishK_PwrCst_Wk1_Section4-Business.ipynb`
+- Purpose: Lag scouting (lag‑1, lag‑24) using lag corr, ACF/PACF.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section4_dev/reports/SDS-CP036-powercast_Wk01_Section4_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section4_preprod/reports/SDS-CP036-powercast_Wk01_Section4_Business_Report.md`
+  - `final` report: `results/Wk01_Section4_final/reports/SDS-CP036-powercast_Wk01_Section4_Business_Report.md`
 
-### Wk01_Section1 — Time Checks & Overview
-- 💼 [Wk01 Section1 Business Report](./results/Wk01_Section1/reports/SDS-CP036-powercast_Wk01_Section1_Report_Business.md)
-### Wk01_Section2 — Week 1 — Section 2
-- 📊 [Wk01 Section2 Box By Dow](./results/Wk01_Section2/plots/section2_box_by_dow.png)
-- 📊 [Wk01 Section2 Daily Averages](./results/Wk01_Section2/plots/section2_daily_averages.png)
-- 📊 [Wk01 Section2 Heatmap Zone1](./results/Wk01_Section2/plots/section2_heatmap_zone1.png)
-- 💼 [Wk01 Section2 Business Report](./results/Wk01_Section2/reports/SDS-CP036-powercast_Wk01_Section2_Report_Business.md)
-### Wk01_Section3 — Week 1 — Section 3
-- 📊 [Wk01 Section3 Correlation Heatmap](./results/Wk01_Section3/plots/section3_correlation_heatmap.png)
-- 📊 [Wk01 Section3 Scatter Humidity Total](./results/Wk01_Section3/plots/section3_scatter_humidity_total.png)
-- 📊 [Wk01 Section3 Scatter Temp Total](./results/Wk01_Section3/plots/section3_scatter_temp_total.png)
-- 💼 [Wk01 Section3 Business Report](./results/Wk01_Section3/reports/SDS-CP036-powercast_Wk01_Section3_Report_Business.md)
-### Wk01_Section4 — Week 1 — Section 4
-- 📊 [Wk01 Section4 Box Daily](./results/Wk01_Section4/plots/section4_box_daily.png)
-- 📊 [Wk01 Section4 Daily Ts Anoms](./results/Wk01_Section4/plots/section4_daily_ts_anoms.png)
-- 📊 [Wk01 Section4 Hist Daily](./results/Wk01_Section4/plots/section4_hist_daily.png)
-- 💼 [Wk01 Section4 Business Report](./results/Wk01_Section4/reports/SDS-CP036-powercast_Wk01_Section4_Report_Business.md)
-### Wk01_Section5 — Week 1 — Section 5
-- 📊 [Wk01 Section5 Forecast7D](./results/Wk01_Section5/plots/section5_forecast7d.png)
-- 📊 [Wk01 Section5 Recent Daily](./results/Wk01_Section5/plots/section5_recent_daily.png)
-- 💼 [Wk01 Section5 Business Report](./results/Wk01_Section5/reports/SDS-CP036-powercast_Wk01_Section5_Report_Business.md)
+### Data Quality & Sensor Anomalies
+- Notebook: `GirishK_PwrCst_Wk1_Section5-Business.ipynb`
+- Purpose: Outlier flags (negatives, spikes) and quality audit.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section5_dev/reports/SDS-CP036-powercast_Wk01_Section5_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section5_preprod/reports/SDS-CP036-powercast_Wk01_Section5_Business_Report.md`
+  - `final` report: `results/Wk01_Section5_final/reports/SDS-CP036-powercast_Wk01_Section5_Business_Report.md`
+
+### Consolidated Week 1 Report
+- `SDS-CP036-powercast_Wk01_Report_Business.md`
 
 ---
 
-## Consolidated Reports
+## Week 2 – Key Notebooks & Reports
 
-- 📘 [Week 2 Consolidated Business Report](./SDS-CP036-powercast_Wk02_Report_Business.md)
-- 📘 [Week 1 Consolidated Business Report](./SDS-CP036-powercast_Wk01_Report_Business.md)
+### Time-Based Feature Engineering
+- Notebook: `GirishK_PwrCst_Wk2_Section1-Business.ipynb`
+- Purpose: Hour/weekday/weekend/month features (+ optional cyclical encodings).
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section1_dev/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section1_preprod/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md`
+  - `final` report: `results/Wk02_Section1_final/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md`
+
+### Lag & Rolling Statistics
+- Notebook: `GirishK_PwrCst_Wk2_Section2-Business.ipynb`
+- Purpose: Lag‑1/lag‑24 and short rolling stats for stability.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section2_dev/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section2_preprod/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md`
+  - `final` report: `results/Wk02_Section2_final/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md`
+
+### Feature Scaling & Normalization
+- Notebook: `GirishK_PwrCst_Wk2_Section3-Business.ipynb`
+- Purpose: Scaling/normalization fit on train only (leakage‑safe).
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section3_dev/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section3_preprod/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md`
+  - `final` report: `results/Wk02_Section3_final/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md`
+
+### Data Splitting & Preparation
+- Notebook: `GirishK_PwrCst_Wk2_Section4-Business.ipynb`
+- Purpose: Chronological splits train→val→test; indices saved for audit.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section4_dev/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section4_preprod/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md`
+  - `final` report: `results/Wk02_Section4_final/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md`
+
+### Data Quality & Preprocessing
+- Notebook: `GirishK_PwrCst_Wk2_Section5-Business.ipynb`
+- Purpose: Imputation/capping pipelines; stability checks across slices.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section5_dev/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section5_preprod/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md`
+  - `final` report: `results/Wk02_Section5_final/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md`
+
+### Consolidated Week 2 Report
+- `SDS-CP036-powercast_Wk02_Report_Business.md`
+
+---
+
+## Week 3 – Key Notebooks & Reports
+
+### Model Selection & Training
+- Notebook: `GirishK_PwrCst_Wk3_Section1-Business.ipynb`
+- Purpose: Baseline vs SARIMAX vs XGBoost; metrics and A vs P plots per zone.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk03_Section1_dev/reports/SDS-CP036-powercast_Wk03_Section1_Business_Report.md`
+  - `preprod` report: `results/Wk03_Section1_preprod/reports/SDS-CP036-powercast_Wk03_Section1_Business_Report.md`
+  - `final` report: `results/Wk03_Section1_final/reports/SDS-CP036-powercast_Wk03_Section1_Business_Report.md`
+
+### MLflow Experiment Tracking & Evaluation
+- Notebook: `GirishK_PwrCst_Wk3_Section2-Business.ipynb`
+- Purpose: MLflow logging (params/metrics/artifacts); hold‑out/backtests.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk03_Section2_dev/reports/SDS-CP036-powercast_Wk03_Section2_Business_Report.md`
+  - `preprod` report: `results/Wk03_Section2_preprod/reports/SDS-CP036-powercast_Wk03_Section2_Business_Report.md`
+  - `final` report: `results/Wk03_Section2_final/reports/SDS-CP036-powercast_Wk03_Section2_Business_Report.md`
+
+### Evaluation & Model Interpretation & Insights
+- Notebook: `GirishK_PwrCst_Wk3_Section3-Business.ipynb`
+- Purpose: Correlations, SARIMAX coefs, XGBoost importances, residual bias.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk03_Section3_dev/reports/SDS-CP036-powercast_Wk03_Section3_Business_Report.md`
+  - `preprod` report: `results/Wk03_Section3_preprod/reports/SDS-CP036-powercast_Wk03_Section3_Business_Report.md`
+  - `final` report: `results/Wk03_Section3_final/reports/SDS-CP036-powercast_Wk03_Section3_Business_Report.md`
+
+### Consolidated Week 3 Report
+- `SDS-CP036-powercast_Wk03_Report_Business.md`
+
+---
+
+## How to Run the Notebooks
+1. Open the notebook in JupyterLab.
+2. (Optional) Set `PROFILE = "dev" | "preprod" | "final"` at the top of the single cell (where supported).
+3. Execute the single code cell.
+4. Open the generated plots/CSVs and the Section report under the corresponding `results/Wk0X_SectionY_<profile>/reports/` folder.
+
+**Profiles**
+- `dev`: fast smoke test (1 zone, 7-day test window)
+- `preprod`: fuller check (3 zones, 28-day test window)
+- `final`: full run (3 zones, capped to last 365 days)
+
+---
+## Notes
+- This generator is idempotent: re-running will refresh timestamps and paths.
+- If any reports are missing, run the corresponding notebook first to generate them.
