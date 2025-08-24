@@ -1,4 +1,4 @@
-# 🔴 PowerCast – Advanced Track
+# 🔴 PowerCast – Beginner Track
 
 ## ✅ Week 1: Setup & Exploratory Data Analysis (EDA)
 
