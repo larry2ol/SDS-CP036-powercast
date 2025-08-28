@@ -1,2 +1,26 @@
-# Additioanl  Libraries
+# Core Libraries
+numpy==1.26.4
+pandas
+
+# Visualization
+matplotlib
+seaborn
+plotly
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+
+# Experiment Tracking
+mlflow
+
+# Deployment
+streamlit
+
+# Utilities
+python-dotenv
+
+# Additional  Libraries
 statsmodels
+pmdarima==2.0.4week2
