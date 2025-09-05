@@ -182,3 +182,56 @@ Q: Did you observe any systematic errors or biases in your model predictions? Ho
 A:
 
 Q: What trade-offs did you consider when selecting your final baseline model architecture?
+
+---
+
+## ✅ Week 4: Model Optimization & Interpretability
+
+### 🏗️ 1. Architecture Tuning & Experimentation
+
+Q: Which architectural changes (e.g., depth, number of units, bidirectionality, dilation) did you experiment with, and why?  
+A:
+
+Q: How did you decide on the final architecture for your deep learning model?  
+A:
+
+Q: What impact did these changes have on model performance and training stability?  
+A:
+
+---
+
+### ⏸️ 2. Training Strategies & Regularization
+
+Q: How did you apply early stopping or learning rate scheduling during training?  
+A:
+
+Q: What regularization techniques (e.g., Dropout, Batch Normalization) did you use, and how did they affect results?  
+A:
+
+Q: How did you monitor and address overfitting or underfitting during optimization?  
+A:
+
+---
+
+### 🧠 3. Model Interpretability
+
+Q: Which interpretability methods (e.g., SHAP, saliency maps, attention plots) did you use to understand your model’s predictions?  
+A:
+
+Q: What insights did you gain about feature importance or temporal dependencies from these methods?  
+A:
+
+Q: How did interpretability findings influence your modeling or feature engineering decisions?  
+A:
+
+---
+
+### 📊 4. Error Analysis & Residuals
+
+Q: How did you analyze residuals and error distributions across different zones?  
+A:
+
+Q: Did you identify any systematic errors or biases in your model predictions? How did you address them?  
+A:
+
+Q: What steps did you take to ensure robust evaluation and fair comparison of model performance across different configurations?
