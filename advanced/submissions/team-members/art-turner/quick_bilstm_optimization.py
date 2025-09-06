@@ -13,7 +13,8 @@ import mlflow.pytorch
 from pathlib import Path
 
 from advanced_models import BidirectionalLSTM
-from training_fixed import MetricsCalculator, PowerConsumptionDataset
+from training_fixed import MetricsCalculator
+from week2_feature_engineering_fixed import PowerConsumptionDataset
 import pickle
 import json
 
