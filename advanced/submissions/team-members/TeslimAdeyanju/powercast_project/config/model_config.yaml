@@ -1,0 +1,92 @@
+# PowerCast Model Configuration
+# Deep Learning Time-Series Forecasting Parameters
+
+# Data Configuration
+data:
+  file_path: "data/data.csv"
+  target_column: "Zone 1 Power Consumption"
+  datetime_column: "DateTime"
+  test_size: 0.2
+  validation_size: 0.2
+  
+# Feature Engineering
+features:
+  window_size: 48  # Number of time steps to look back
+  forecast_horizon: 24  # Number of time steps to predict
+  scaling_method: "minmax"  # Options: minmax, standard, robust
+  
+# LSTM Model Configuration
+lstm:
+  layers:
+    - units: 128
+      return_sequences: true
+      dropout: 0.2
+    - units: 64
+      return_sequences: false
+      dropout: 0.2
+  dense_units: 32
+  output_units: 24
+  activation: "relu"
+  optimizer: "adam"
+  loss: "mse"
+  metrics: ["mae", "mape"]
+  
+# GRU Model Configuration
+gru:
+  layers:
+    - units: 100
+      return_sequences: true
+      dropout: 0.2
+    - units: 50
+      return_sequences: false
+      dropout: 0.2
+  dense_units: 25
+  output_units: 24
+  activation: "relu"
+  optimizer: "adam"
+  loss: "mse"
+  metrics: ["mae", "mape"]
+  
+# Dense Neural Network Configuration
+dense:
+  layers:
+    - units: 512
+      activation: "relu"
+      dropout: 0.3
+    - units: 256
+      activation: "relu"
+      dropout: 0.3
+    - units: 128
+      activation: "relu"
+      dropout: 0.2
+    - units: 64
+      activation: "relu"
+      dropout: 0.2
+  output_units: 24
+  optimizer: "adam"
+  loss: "mse"
+  metrics: ["mae", "mape"]
+  
+# Training Configuration
+training:
+  epochs: 100
+  batch_size: 64
+  patience: 15
+  min_delta: 0.001
+  restore_best_weights: true
+  validation_freq: 1
+  verbose: 1
+  
+# Model Evaluation
+evaluation:
+  metrics: ["mse", "mae", "mape", "r2", "rmse"]
+  plot_predictions: true
+  save_plots: true
+  plot_format: "png"
+  
+# Paths
+paths:
+  models: "models/"
+  plots: "docs/plots/"
+  logs: "logs/"
+  checkpoints: "checkpoints/"

@@ -1,0 +1,19 @@
+{
+  "sampling_minutes": 10,
+  "daily_period_steps": 144,
+  "lookback_candidates_steps": [
+    36,
+    72,
+    144
+  ],
+  "forecast_horizon_steps": [
+    6,
+    12,
+    36
+  ],
+  "notes": [
+    "Daily seasonality observed; include 24h lookback.",
+    "PACF highlights short impactful lags; include 6\u201312h lookbacks.",
+    "Horizons at 1\u20136h balance near-term accuracy and operational usefulness."
+  ]
+}

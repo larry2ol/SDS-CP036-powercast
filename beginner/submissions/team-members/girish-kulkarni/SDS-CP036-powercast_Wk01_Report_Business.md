@@ -1,162 +1,165 @@
-# SDS-CP036-powercast – Wk01 – Consolidated Business Report
-_2025-08-09 22:30:42_
+# SDS-CP036-powercast – Wk01 – Consolidated Business Report (from results/Wk01_CONSOLIDATED)
+_2025-08-15 23:25:52_
+
+# SDS-CP036-powercast — Wk01 Consolidated Business Report (Inline Plots v2)
+
+Generated on: 2025-08-15 23:25:52
+Project root: `/home/6376f5a9-d12b-4255-9426-c0091ad440a7/Powercast`
+
+Includes Sections: 1, 2, 3, 4, 5
+
 
 ## Table of Contents
-- [Section 1 – Business Report](#section-1-–-business-report)
-- [Section 2 – Business Report](#section-2-–-business-report)
-- [Section 3 – Business Report](#section-3-–-business-report)
-- [Section 4 – Business Report](#section-4-–-business-report)
-- [Section 5 – Business Report](#section-5-–-business-report)
+- [Section 1 — 💼 Week 1 – Section1: Time Consistency & Structure (Business-Friendly Report)](#section-1)
+- [Section 2 — 💼 Week 1 – Section2: Temporal Trends (Business-Friendly Report)](#section-2)
+- [Section 3 — 💼 Week 1 – Section3: Drivers & Correlations (Business-Friendly Report)](#section-3)
+- [Section 4 — 💼 Week 1 – Section4: Anomalies & Outliers (Business-Friendly Report)](#section-4)
+- [Section 5 — 💼 Week 1 – Section5: Baseline Forecast & Capacity Readiness (Business-Friendly Report)](#section-5)
 
+## Section 1 — 💼 Week 1 – Section1: Time Consistency & Structure (Business-Friendly Report)
 
-## Section 1 – Business Report
-
-_Source: results/Wk01_Section1/reports/SDS-CP036-powercast_Wk01_Section1_Report_Business.md_
+## Dataset
+Using file: **Tetuan City power consumption.csv**
 
 ## Key Questions Answered
 **Q1: Are there any missing or irregular timestamps in the dataset? How did you verify consistency?**  
-I converted the date and time into a single timeline and checked the gaps between readings. Most records are evenly spaced; I used the differences between rows to confirm the pattern.
+I created a canonical `DateTime` column and inspected gaps between consecutive records to detect irregularities.
 
 **Q2: What is the sampling frequency and are all records spaced consistently?**  
-I measured the time between consecutive rows. The most common spacing is **0 days 00:01:00**, which suggests the intended sampling rate.
+I measured the time deltas between consecutive rows. The most common spacing is **0 days 00:10:00**, suggesting the intended sampling cadence.
 
 **Q3: Did you encounter any duplicates or inconsistent `DateTime` entries?**  
-I checked for repeated timestamps. I found **0** duplicates; these could be rechecked or removed if needed.
+I found **0** duplicate timestamps (exact same `DateTime`). These could be reviewed or deduplicated based on your business rules.
 
 ## Plain-English Notes
-- I first made a proper date-time column.
-- I looked for missing times and uneven gaps.
-- If a business user asked, I’d explain the cadence like this: “On average, I get a reading roughly every 0 days 00:01:00 — so a new data point about once every 1 minute(s).”
+- Built a single `DateTime` column from whatever the dataset provided (flexible parsing with comma/semicolon delimiters and both month-first/day-first formats).
+- Looked for missing times and uneven gaps using the distribution of time differences.
+- Business takeaway: “On average, there’s a reading roughly every 0 days 00:10:00 — i.e., about 10 minute(s) per record.”
 
+### Visuals
 
----
+_No plot files found for this section._
 
-## Section 2 – Business Report
+## Section 2 — 💼 Week 1 – Section2: Temporal Trends (Business-Friendly Report)
 
-_Source: results/Wk01_Section2/reports/SDS-CP036-powercast_Wk01_Section2_Report_Business.md_
+## Dataset
+Using file: **Tetuan City power consumption.csv**  
+Period: **2017-01-01 00:00:00 → 2017-12-30 23:50:00**  
+Rows: **52,416**
 
 ## Key Questions Answered
 **Q1: What daily or weekly patterns are observable in power consumption across the three zones?**  
-I reviewed usage by day and week. Kitchen (Zone 1) spikes around meal times. Laundry (Zone 2) is busier on weekends. Water heating/AC (Zone 3) is steadier.
+- The **line plot** of daily averages (Total & Zones) shows overall movement and relative contribution by zone.  
+- By weekday, average total usage peaks on **Thu** based on the dataset's mean profile.
 
 **Q2: Are there seasonal or time-of-day peaks and dips in energy usage?**  
-Yes. The line chart shows daily trends; the heatmap highlights time-of-day peaks in the kitchen around lunch and dinner.
+- The **heatmap** for Zone 1 (kitchen proxy) highlights typical time-of-day peaks; the highest average hour is around **20:00**.  
+- Broader seasonal effects can be explored by comparing monthly averages (extendable in this section if needed).
 
 **Q3: Which visualizations helped you uncover these patterns?**  
-- Line plot (daily averages)  
-- Box plot (by day of week)  
-- Heatmap (hour vs day for Zone 1)
+- **Line plot** (daily averages): `results/Wk01_Section2/plots/section2_daily_averages.png`  
+- **Box plot** (by day of week): `results/Wk01_Section2/plots/section2_box_by_dow.png`  
+- **Heatmap** (hour vs day for Zone 1): `results/Wk01_Section2/plots/section2_heatmap_zone1.png`
 
+## What we computed
+- Canonical **DateTime** and zone aliasing (**Zone 1/2/3 → Sub_metering_1/2/3**).  
+- **Daily averages** of total and per-zone consumption.  
+- **Day-of-week distribution** (box plot) for total consumption.  
+- **Hour × day heatmap** for Zone 1.
 
----
+### Visuals
 
-## Section 3 – Business Report
+![Section 2 — section2_daily_averages.png](results/Wk01_Section2/plots/section2_daily_averages.png)
+![Section 2 — section2_box_by_dow.png](results/Wk01_Section2/plots/section2_box_by_dow.png)
+![Section 2 — section2_heatmap_zone1.png](results/Wk01_Section2/plots/section2_heatmap_zone1.png)
 
-_Source: results/Wk01_Section3/reports/SDS-CP036-powercast_Wk01_Section3_Report_Business.md_
+## Section 3 — 💼 Week 1 – Section3: Drivers & Correlations (Business-Friendly Report)
 
-## Key Questions Answered
-**Q1: Which environmental variables correlate most with energy usage?**  
-I compared temperature, humidity, wind, and sunlight with energy use in each zone. The AC/Water Heating zone showed the strongest link to temperature and wind; the kitchen was less weather-sensitive.
-
-**Q2: Are any variables inversely correlated with demand in specific zones?**  
-Yes. In warmer hours, water heating demand can drop (negative link with temperature), while cooling may increase.
-
-**Q3: Did your analysis differ across zones? Why might that be?**  
-Yes. Each zone powers different appliances: the kitchen follows meal schedules; laundry is sporadic; HVAC/water heating track outdoor conditions more closely.
-
-
----
-
-## Section 4 – Business Report
-
-_Source: results/Wk01_Section4/SDS-CP036-powercast_Wk01_Section4_Report_Business.md_
+## Dataset
+Using file: **Tetuan City power consumption.csv**  
+Period: **2017-01-01 00:00:00 → 2017-12-30 23:50:00**  
+Rows: **52,416**
 
 ## Key Questions Answered
+**Q1: Which factors appear most correlated with total and per-zone consumption?**  
+- Total consumption driver: **Temperature (|r|=0.73)**  
+- Zone 1 driver: **Temperature (|r|=0.73)**  
+- Zone 2 driver: **Temperature (|r|=0.42)**  
+- Zone 3 driver: **Temperature (|r|=0.61)**
 
-**Q1: Did I observe any lagged effects where past weather conditions predict current power usage?**  
-Yes. I observed meaningful lagged relationships, especially between temperature/wind and energy usage in the HVAC/water heating zone.
+**Q2: Are relationships linear or do they show thresholds?**  
+- The **scatter plots** (daily means) help reveal linear vs. curved patterns and potential thresholds. Patterns tend to be smooth with some spread due to operational effects.
 
-**Q2: How did I analyze lag (e.g., shifting features, plotting lag correlation)?**  
-I shifted hourly weather data by 0–12 hours and computed Pearson correlations against each zone’s usage, plotting correlation vs. lag.
+**Q3: Which visualizations helped you uncover these patterns?**  
+- **Correlation matrix** of daily means: `results/Wk01_Section3/plots/section3_correlation_heatmap.png`  
+- **Scatter plots** contrasting key drivers vs Total_kW: plots/section3_scatter_temp_total.png, plots/section3_scatter_humidity_total.png
 
-**Q3: What lag intervals appeared most relevant and why?**  
-- **Kitchen (Zone 1):** Temperature & humidity showed modest effects around 2–4 hours.  
-- **Laundry (Zone 2):** Solar radiation showed a minor delayed effect; others were weak.  
-- **HVAC/Water Heater (Zone 3):** Temperature and wind peaked around 3–6 hours, aligning with heating/cooling dynamics.
+## What we computed
+- Canonical **DateTime** and zone aliasing (**Zone 1/2/3 → Sub_metering 1/2/3**).  
+- Daily means to stabilize noise.  
+- Pearson correlations among consumption (Total + Zones) and environmental features.
 
-## Visuals
+### Visuals
 
-### Zone 1 (Kitchen)
+![Section 3 — section3_correlation_heatmap.png](results/Wk01_Section3/plots/section3_correlation_heatmap.png)
+![Section 3 — section3_scatter_humidity_total.png](results/Wk01_Section3/plots/section3_scatter_humidity_total.png)
+![Section 3 — section3_scatter_temp_total.png](results/Wk01_Section3/plots/section3_scatter_temp_total.png)
 
-![](plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_1.png)
+## Section 4 — 💼 Week 1 – Section4: Anomalies & Outliers (Business-Friendly Report)
 
-### Zone 2 (Laundry)
-
-![](plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_2.png)
-
-### Zone 3 (Water Heater & AC)
-
-![](plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_3.png)
-
-### Temperature vs Energy – All Zones
-
-![](plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_temperature_all_zones.png)
-
-## Practical Takeaways
-
-- Short-term forecasts (2–6 hours ahead) can improve scheduling of HVAC and heavy appliances.
-- I can automate pre-cooling/heating when temperature/wind trends indicate upcoming load.
-- Adding lagged weather features should improve short-term demand predictions.
-
-
----
-
-## Section 5 – Business Report
-
-_Source: results/Wk01_Section5/SDS-CP036-powercast_Wk01_Section5_Report_Business.md_
+## Dataset
+Using file: **Tetuan City power consumption.csv**  
+Period: **2017-01-01 00:00:00 → 2017-12-30 23:50:00**  
+Rows: **52,416**
 
 ## Key Questions Answered
+**Q1: Are there anomalous days in total energy consumption? When?**  
+- Detected **4** anomalous day(s) using a ±3σ z-score rule on **daily totals**.
+- Top examples: 2017-07-25 (z=3.23), 2017-07-24 (z=3.11), 2017-07-27 (z=3.10), 2017-07-26 (z=3.03)
 
-**Q1: Did I detect any outliers in the weather or consumption readings?**  
-Yes. I found outliers across several features using boxplots/IQR rules and histograms. Sub-meter readings occasionally had extreme spikes, and weather features showed sporadic high/low values.
+**Q2: What could explain these anomalies?**  
+- Check overlaps with weather or events (e.g., heat waves, holidays, maintenance). You can cross-reference with the Tetuan environmental columns or your calendar.
 
-**Q2: How did I identify and treat these anomalies?**  
-I used IQR-based clipping (to cap extreme values) and replaced negative sub-meter readings with blanks (then filled small gaps). I also forward-/back-filled short missing stretches.
+**Q3: Which visualizations helped you uncover these?**  
+- Time series with control limits: `results/Wk01_Section4/plots/section4_daily_ts_anoms.png`  
+- Boxplot of daily totals: `results/Wk01_Section4/plots/section4_box_daily.png`  
+- Histogram for distribution context: `results/Wk01_Section4/plots/section4_hist_daily.png`
 
-**Q3: What might be the impact of retaining or removing them in my model?**  
-Capping/removing extremes reduces noise and helps models generalize, while retaining them can cause unstable forecasts. For production systems, I would keep this cleaning to improve reliability.
+## What we computed
+- Canonical DateTime & zone aliasing; **Total_kW** across zones.  
+- **Daily totals** and a simple **z-score**-based anomaly detector (±3σ).  
+- A short list of the most extreme days for review.
 
-## Missing Values (Before Cleaning)
+### Visuals
 
-- Sub_metering_1: 0
-- Sub_metering_2: 0
-- Sub_metering_3: 0
-- relative_humidity_2m: 0
-- shortwave_radiation: 0
-- temperature_2m: 0
-- wind_speed_10m: 0
+![Section 4 — section4_daily_ts_anoms.png](results/Wk01_Section4/plots/section4_daily_ts_anoms.png)
+![Section 4 — section4_box_daily.png](results/Wk01_Section4/plots/section4_box_daily.png)
+![Section 4 — section4_hist_daily.png](results/Wk01_Section4/plots/section4_hist_daily.png)
 
-## Missing Values (After Cleaning)
+## Section 5 — 💼 Week 1 – Section5: Baseline Forecast & Capacity Readiness (Business-Friendly Report)
 
-- Sub_metering_1: 0
-- Sub_metering_2: 0
-- Sub_metering_3: 0
-- relative_humidity_2m: 0
-- shortwave_radiation: 0
-- temperature_2m: 0
-- wind_speed_10m: 0
+## Dataset
+Using file: **Tetuan City power consumption.csv**  
+Period: **2017-01-01 00:00:00 → 2017-12-30 23:50:00**  
+Rows: **52,416**
 
-## Visual Evidence
+## Key Questions Answered
+**Q1: What does the short-term baseline forecast look like?**  
+- A simple **day-of-week average** model projects the next 7 days. Peak is **2018-01-04** (~**10444513 kW** daily).
 
-**Before – Histograms**  
-![](plots/SDS-CP036-powercast_Wk01_Section5_Plot_Hist_Before.png)
+**Q2: How should operations plan around expected peaks?**  
+- Staff or schedule energy-intensive tasks away from forecasted peak days; consider shifting flexible loads to lower-demand days.
 
-**Before – Boxplots**  
-![](plots/SDS-CP036-powercast_Wk01_Section5_Plot_Box_Before.png)
+**Q3: Which visualizations helped?**  
+- Recent actuals (last 60 days): `results/Wk01_Section5/plots/section5_recent_daily.png`  
+- 7-day baseline forecast: `results/Wk01_Section5/plots/section5_forecast7d.png`
 
-**After – Histograms**  
-![](plots/SDS-CP036-powercast_Wk01_Section5_Plot_Hist_After.png)
+## What we computed
+- Canonical DateTime & zone aliasing; **Total_kW** across zones.  
+- **Daily totals** and **DoW mean** profile.  
+- A lightweight **7-day baseline** forecast using day-of-week averages (extendable to richer models later).
 
-**After – Boxplots**  
-![](plots/SDS-CP036-powercast_Wk01_Section5_Plot_Box_After.png)
+### Visuals
 
+![Section 5 — section5_recent_daily.png](results/Wk01_Section5/plots/section5_recent_daily.png)
+![Section 5 — section5_forecast7d.png](results/Wk01_Section5/plots/section5_forecast7d.png)

@@ -1,0 +1,9 @@
+{
+  "input_mode": "section3",
+  "source_mode": "section3",
+  "source": "scaled_standard_train.csv + scaled_standard_test.csv",
+  "rows": 52416,
+  "rows_train": 41932,
+  "rows_test": 10484,
+  "target": "Total_auto"
+}
