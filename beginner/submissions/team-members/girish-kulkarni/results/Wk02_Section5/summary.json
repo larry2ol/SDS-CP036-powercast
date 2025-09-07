@@ -1,0 +1,7 @@
+{
+  "input_mode": "section4",
+  "source": "train.csv + test.csv",
+  "train_csv": "/home/6376f5a9-d12b-4255-9426-c0091ad440a7/Powercast/results/Wk02_Section5/features/cleaned_train.csv",
+  "test_csv": "/home/6376f5a9-d12b-4255-9426-c0091ad440a7/Powercast/results/Wk02_Section5/features/cleaned_test.csv",
+  "dq_json": "/home/6376f5a9-d12b-4255-9426-c0091ad440a7/Powercast/results/Wk02_Section5/features/data_quality_summary.json"
+}

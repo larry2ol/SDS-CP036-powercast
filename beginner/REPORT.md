@@ -130,3 +130,113 @@ A:
 
 Q: How did you validate that your feature engineering and preprocessing pipeline produced consistent and reliable results across different data subsets?  
 A:
+
+---
+
+## ✅ Week 3: Model Development & Experimentation
+
+---
+
+### 🤖 1. Model Selection & Training
+
+Q: Which machine learning models did you choose for forecasting power consumption, and what motivated your selections?  
+A:
+
+Q: How did you structure your models to handle the multi-zone prediction task (separate models vs. multi-output)?  
+A:
+
+Q: What challenges did you encounter during model training, and how did you address them?  
+A:
+
+---
+
+### 📈 2. Experiment Tracking & Evaluation
+
+Q: Which evaluation metrics did you use to assess model performance, and why are they appropriate for this problem?  
+A:
+
+Q: How did you use MLflow (or another tool) to track your experiments and results?  
+A:
+
+Q: What insights did you gain from comparing actual vs. predicted curves for each zone?  
+A:
+
+---
+
+### 🔍 3. Model Interpretation & Insights
+
+Q: How did you interpret feature importance or model coefficients, and what did they reveal about power consumption drivers?  
+A:
+
+Q: Did you observe any systematic errors or biases in your model predictions? How did you investigate and address them?  
+A:
+
+Q: What trade-offs did you consider when selecting your final model(s) for each zone?  
+A:
+
+---
+
+## ✅ Week 4: Model Tuning & Finalization
+
+### 🛠️ 1. Hyperparameter Optimization
+
+Q: Which hyperparameter tuning methods (e.g., GridSearchCV, Optuna) did you use, and why?  
+A:
+
+Q: What were the most important hyperparameters for each model, and how did you select their ranges?  
+A:
+
+Q: How did you ensure that your tuning process did not introduce data leakage or overfitting?  
+A:
+
+---
+
+### 🔁 2. Retraining & Validation
+
+Q: How did you retrain your best models on the full training data after tuning?  
+A:
+
+Q: What steps did you take to validate model performance on the test set?  
+A:
+
+Q: Did you observe any changes in performance after retraining? How did you interpret these results?  
+A:
+
+---
+
+### ⚖️ 3. Model Selection & Trade-offs
+
+Q: What trade-offs did you consider when selecting your final model(s) for each zone?  
+A:
+
+Q: How did you compare and document the performance of different models?  
+A:
+
+Q: What factors (e.g., interpretability, accuracy, computational cost) influenced your model selection?  
+A:
+
+---
+
+### 📦 4. Model Export & Deployment
+
+Q: How did you export your final model(s) for deployment, and what format did you use?  
+A:
+
+Q: What considerations did you take into account for deploying models in a production environment?  
+A:
+
+Q: Did you create any custom functions or classes for inference? If so, please describe them.  
+A:
+
+---
+
+### 🚀 5. Monitoring & Maintenance Planning
+
+Q: How do you plan to monitor model performance and data quality in production?  
+A:
+
+Q: What thresholds or indicators will prompt a model retraining or update?  
+A:
+
+Q: How will you handle potential data drift or changes in underlying patterns?  
+A:

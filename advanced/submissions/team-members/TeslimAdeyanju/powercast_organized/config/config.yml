@@ -1,0 +1,105 @@
+# PowerCast Configuration File
+# Global settings for the PowerCast time-series forecasting project
+
+# Data Configuration
+data:
+  file_path: "data/data.csv"
+  date_column: "DateTime"
+  target_columns:
+    - "Zone 1 Power Consumption"
+    - "Zone 2 Power Consumption" 
+    - "Zone 3 Power Consumption"
+  feature_columns:
+    - "Temperature"
+    - "Humidity"
+    - "Wind Speed"
+    - "general diffuse flows"
+    - "diffuse flows"
+  test_size: 0.2
+  validation_size: 0.2
+  random_state: 42
+
+# Model Configuration
+models:
+  lstm:
+    name: "LSTM PowerCast Model"
+    units: [64, 32]
+    dropout: 0.2
+    recurrent_dropout: 0.2
+    activation: "tanh"
+    return_sequences: false
+    
+  gru:
+    name: "GRU PowerCast Model"
+    units: [64, 32]
+    dropout: 0.2
+    recurrent_dropout: 0.2
+    activation: "tanh"
+    return_sequences: false
+    
+  dense:
+    name: "Dense PowerCast Model"
+    units: [128, 64, 32]
+    dropout: 0.3
+    activation: "relu"
+
+# Training Configuration
+training:
+  epochs: 100
+  batch_size: 32
+  learning_rate: 0.001
+  optimizer: "adam"
+  loss_function: "mse"
+  metrics: ["mae", "mse"]
+  early_stopping:
+    monitor: "val_loss"
+    patience: 10
+    restore_best_weights: true
+  reduce_lr:
+    monitor: "val_loss"
+    factor: 0.5
+    patience: 5
+    min_lr: 0.0001
+
+# Preprocessing Configuration
+preprocessing:
+  scaling_method: "minmax"
+  sequence_length: 24  # 24 hours lookback
+  prediction_horizon: 1  # 1 hour ahead
+  fill_missing: "forward_fill"
+  remove_outliers: true
+  outlier_threshold: 3  # standard deviations
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "mae"
+    - "mse" 
+    - "rmse"
+    - "mape"
+    - "r2_score"
+  plot_predictions: true
+  save_plots: true
+  plot_format: "png"
+  plot_dpi: 300
+
+# File Paths
+paths:
+  data_dir: "data/"
+  models_dir: "models/"
+  results_dir: "results/"
+  plots_dir: "plots/"
+  logs_dir: "logs/"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/powercast.log"
+  console: true
+
+# Random Seeds for Reproducibility
+random_seeds:
+  numpy: 42
+  tensorflow: 42
+  python: 42

@@ -1,71 +1,144 @@
-﻿# kgirishv — Powercast (Beginner Track)
+# PowerCast – Project README
 
-**Team member:** [@kgirishv](https://github.com/kgirishv)
+_Generated/updated: 2025-08-23 06:15:08_
 
-> This folder contains my Week 1 business report and generated plots. Click any link below to open the image on GitHub.
+## Week 1 – Key Notebooks & Reports
 
-## Table of Contents
-- [Short Bio](#short-bio)
-- [How to Reproduce the Plots](#how-to-reproduce-the-plots)
-- [Quick Gallery (click any thumbnail)](#quick-gallery-click-any-thumbnail)
-- [Plots (grouped by Section)](#plots-grouped-by-section)
-- [Section Reports (grouped)](#section-reports-grouped)
-- [Top-level Week 1 Report](#top-level-week-1-report)
+### Time Consistency & Structure
+- Notebook: `GirishK_PwrCst_Wk1_Section1-Business.ipynb`
+- Purpose: Checks timestamp integrity (hourly grid), gaps/overlaps, duplicates.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section1_dev/reports/SDS-CP036-powercast_Wk01_Section1_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section1_preprod/reports/SDS-CP036-powercast_Wk01_Section1_Business_Report.md`
+  - `final` report: `results/Wk01_Section1_final/reports/SDS-CP036-powercast_Wk01_Section1_Business_Report.md`
 
-## Short Bio
-Oracle SCM Cloud consultant and AI/ML practitioner. Building practical forecasting and analytics workflows for the Powercast project.
+### Temporal Trends & Seasonality
+- Notebook: `GirishK_PwrCst_Wk1_Section2-Business.ipynb`
+- Purpose: Daily/weekly patterns via profiles, heatmaps, rolling trends.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section2_dev/reports/SDS-CP036-powercast_Wk01_Section2_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section2_preprod/reports/SDS-CP036-powercast_Wk01_Section2_Business_Report.md`
+  - `final` report: `results/Wk01_Section2_final/reports/SDS-CP036-powercast_Wk01_Section2_Business_Report.md`
 
-## How to Reproduce the Plots
-- Clone my working repository with code/notebooks:  
-  \git clone https://github.com/kgirishv/Powercast.git\
-- Set up Python (3.10+) and install dependencies (see that repo’s README or \equirements.txt\ if present).
-- Make sure data files are available (e.g., \power_consumption.csv\, \weather_data/weather_2006_2010.csv\).
-- Run the Week 1 notebooks/scripts as described in the **Powercast** repo.  
-  Rendered reports and figures are exported to this folder under \esults/\ for easy review.
+### Environmental Feature Relationships
+- Notebook: `GirishK_PwrCst_Wk1_Section3-Business.ipynb`
+- Purpose: Correlation scans with Temperature, Humidity, Wind, Diffuse flows.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section3_dev/reports/SDS-CP036-powercast_Wk01_Section3_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section3_preprod/reports/SDS-CP036-powercast_Wk01_Section3_Business_Report.md`
+  - `final` report: `results/Wk01_Section3_final/reports/SDS-CP036-powercast_Wk01_Section3_Business_Report.md`
 
-## Quick Gallery (click any thumbnail)
-[<img src="./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Daily_Line.png" width="260">](./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Daily_Line.png)
-[<img src="./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Heatmap_Zone1.png" width="260">](./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Heatmap_Zone1.png)
-[<img src="./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Weekly_Box.png" width="260">](./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Weekly_Box.png)
-[<img src="./results/Wk01_Section3/plots/SDS-CP036-powercast_Wk01_Section3_Plot_Corr_AllZones.png" width="260">](./results/Wk01_Section3/plots/SDS-CP036-powercast_Wk01_Section3_Plot_Corr_AllZones.png)
-[<img src="./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_1.png" width="260">](./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_1.png)
-[<img src="./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_2.png" width="260">](./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_2.png)
+### Lag Effects & Time Dependency
+- Notebook: `GirishK_PwrCst_Wk1_Section4-Business.ipynb`
+- Purpose: Lag scouting (lag‑1, lag‑24) using lag corr, ACF/PACF.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section4_dev/reports/SDS-CP036-powercast_Wk01_Section4_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section4_preprod/reports/SDS-CP036-powercast_Wk01_Section4_Business_Report.md`
+  - `final` report: `results/Wk01_Section4_final/reports/SDS-CP036-powercast_Wk01_Section4_Business_Report.md`
 
+### Data Quality & Sensor Anomalies
+- Notebook: `GirishK_PwrCst_Wk1_Section5-Business.ipynb`
+- Purpose: Outlier flags (negatives, spikes) and quality audit.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk01_Section5_dev/reports/SDS-CP036-powercast_Wk01_Section5_Business_Report.md`
+  - `preprod` report: `results/Wk01_Section5_preprod/reports/SDS-CP036-powercast_Wk01_Section5_Business_Report.md`
+  - `final` report: `results/Wk01_Section5_final/reports/SDS-CP036-powercast_Wk01_Section5_Business_Report.md`
 
-## Plots (grouped by Section)
-### Wk01_Section2
-- [SDS-CP036-powercast_Wk01_Section2_Plot_Daily_Line](./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Daily_Line.png)
-- [SDS-CP036-powercast_Wk01_Section2_Plot_Heatmap_Zone1](./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Heatmap_Zone1.png)
-- [SDS-CP036-powercast_Wk01_Section2_Plot_Weekly_Box](./results/Wk01_Section2/plots/SDS-CP036-powercast_Wk01_Section2_Plot_Weekly_Box.png)
+### Consolidated Week 1 Report
+- `SDS-CP036-powercast_Wk01_Report_Business.md`
 
-### Wk01_Section3
-- [SDS-CP036-powercast_Wk01_Section3_Plot_Corr_AllZones](./results/Wk01_Section3/plots/SDS-CP036-powercast_Wk01_Section3_Plot_Corr_AllZones.png)
+---
 
-### Wk01_Section4
-- [SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_1](./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_1.png)
-- [SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_2](./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_2.png)
-- [SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_3](./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_Sub_metering_3.png)
-- [SDS-CP036-powercast_Wk01_Section4_lagcorr_temperature_all_zones](./results/Wk01_Section4/plots/SDS-CP036-powercast_Wk01_Section4_lagcorr_temperature_all_zones.png)
+## Week 2 – Key Notebooks & Reports
 
-### Wk01_Section5
-- [SDS-CP036-powercast_Wk01_Section5_Plot_Box_After](./results/Wk01_Section5/plots/SDS-CP036-powercast_Wk01_Section5_Plot_Box_After.png)
-- [SDS-CP036-powercast_Wk01_Section5_Plot_Box_Before](./results/Wk01_Section5/plots/SDS-CP036-powercast_Wk01_Section5_Plot_Box_Before.png)
-- [SDS-CP036-powercast_Wk01_Section5_Plot_Hist_After](./results/Wk01_Section5/plots/SDS-CP036-powercast_Wk01_Section5_Plot_Hist_After.png)
-- [SDS-CP036-powercast_Wk01_Section5_Plot_Hist_Before](./results/Wk01_Section5/plots/SDS-CP036-powercast_Wk01_Section5_Plot_Hist_Before.png)
+### Time-Based Feature Engineering
+- Notebook: `GirishK_PwrCst_Wk2_Section1-Business.ipynb`
+- Purpose: Hour/weekday/weekend/month features (+ optional cyclical encodings).
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section1_dev/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section1_preprod/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md`
+  - `final` report: `results/Wk02_Section1_final/reports/SDS-CP036-powercast_Wk02_Section1_Business_Report.md`
 
+### Lag & Rolling Statistics
+- Notebook: `GirishK_PwrCst_Wk2_Section2-Business.ipynb`
+- Purpose: Lag‑1/lag‑24 and short rolling stats for stability.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section2_dev/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section2_preprod/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md`
+  - `final` report: `results/Wk02_Section2_final/reports/SDS-CP036-powercast_Wk02_Section2_Business_Report.md`
 
+### Feature Scaling & Normalization
+- Notebook: `GirishK_PwrCst_Wk2_Section3-Business.ipynb`
+- Purpose: Scaling/normalization fit on train only (leakage‑safe).
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section3_dev/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section3_preprod/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md`
+  - `final` report: `results/Wk02_Section3_final/reports/SDS-CP036-powercast_Wk02_Section3_Business_Report.md`
 
-## Section Reports (grouped)
-### Wk01_Section1
-- [ðŸ’¼ Week 1 â€“ Section1: Time Consistency & Structure (Business-Friendly Report)](./results/Wk01_Section1/reports/SDS-CP036-powercast_Wk01_Section1_Report_Business.md)
+### Data Splitting & Preparation
+- Notebook: `GirishK_PwrCst_Wk2_Section4-Business.ipynb`
+- Purpose: Chronological splits train→val→test; indices saved for audit.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section4_dev/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section4_preprod/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md`
+  - `final` report: `results/Wk02_Section4_final/reports/SDS-CP036-powercast_Wk02_Section4_Business_Report.md`
 
-### Wk01_Section2
-- [ðŸ’¼ Week 1 â€“ Section2: Temporal Trends & Seasonality (Business-Friendly Report)](./results/Wk01_Section2/reports/SDS-CP036-powercast_Wk01_Section2_Report_Business.md)
+### Data Quality & Preprocessing
+- Notebook: `GirishK_PwrCst_Wk2_Section5-Business.ipynb`
+- Purpose: Imputation/capping pipelines; stability checks across slices.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk02_Section5_dev/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md`
+  - `preprod` report: `results/Wk02_Section5_preprod/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md`
+  - `final` report: `results/Wk02_Section5_final/reports/SDS-CP036-powercast_Wk02_Section5_Business_Report.md`
 
-### Wk01_Section3
-- [ðŸ’¼ Week 1 â€“ Section3: Environmental Feature Relationships (Business-Friendly Report)](./results/Wk01_Section3/reports/SDS-CP036-powercast_Wk01_Section3_Report_Business.md)
+### Consolidated Week 2 Report
+- `SDS-CP036-powercast_Wk02_Report_Business.md`
 
+---
 
+## Week 3 – Key Notebooks & Reports
 
-## Top-level Week 1 Report
-- [SDS-CP036-powercast â€“ Wk01 â€“ Consolidated Business Report](./SDS-CP036-powercast_Wk01_Report_Business.md)
+### Model Selection & Training
+- Notebook: `GirishK_PwrCst_Wk3_Section1-Business.ipynb`
+- Purpose: Baseline vs SARIMAX vs XGBoost; metrics and A vs P plots per zone.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk03_Section1_dev/reports/SDS-CP036-powercast_Wk03_Section1_Business_Report.md`
+  - `preprod` report: `results/Wk03_Section1_preprod/reports/SDS-CP036-powercast_Wk03_Section1_Business_Report.md`
+  - `final` report: `results/Wk03_Section1_final/reports/SDS-CP036-powercast_Wk03_Section1_Business_Report.md`
+
+### MLflow Experiment Tracking & Evaluation
+- Notebook: `GirishK_PwrCst_Wk3_Section2-Business.ipynb`
+- Purpose: MLflow logging (params/metrics/artifacts); hold‑out/backtests.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk03_Section2_dev/reports/SDS-CP036-powercast_Wk03_Section2_Business_Report.md`
+  - `preprod` report: `results/Wk03_Section2_preprod/reports/SDS-CP036-powercast_Wk03_Section2_Business_Report.md`
+  - `final` report: `results/Wk03_Section2_final/reports/SDS-CP036-powercast_Wk03_Section2_Business_Report.md`
+
+### Evaluation & Model Interpretation & Insights
+- Notebook: `GirishK_PwrCst_Wk3_Section3-Business.ipynb`
+- Purpose: Correlations, SARIMAX coefs, XGBoost importances, residual bias.
+- Expected reports (by profile):
+  - `dev` report: `results/Wk03_Section3_dev/reports/SDS-CP036-powercast_Wk03_Section3_Business_Report.md`
+  - `preprod` report: `results/Wk03_Section3_preprod/reports/SDS-CP036-powercast_Wk03_Section3_Business_Report.md`
+  - `final` report: `results/Wk03_Section3_final/reports/SDS-CP036-powercast_Wk03_Section3_Business_Report.md`
+
+### Consolidated Week 3 Report
+- `SDS-CP036-powercast_Wk03_Report_Business.md`
+
+---
+
+## How to Run the Notebooks
+1. Open the notebook in JupyterLab.
+2. (Optional) Set `PROFILE = "dev" | "preprod" | "final"` at the top of the single cell (where supported).
+3. Execute the single code cell.
+4. Open the generated plots/CSVs and the Section report under the corresponding `results/Wk0X_SectionY_<profile>/reports/` folder.
+
+**Profiles**
+- `dev`: fast smoke test (1 zone, 7-day test window)
+- `preprod`: fuller check (3 zones, 28-day test window)
+- `final`: full run (3 zones, capped to last 365 days)
+
+---
+## Notes
+- This generator is idempotent: re-running will refresh timestamps and paths.
+- If any reports are missing, run the corresponding notebook first to generate them.

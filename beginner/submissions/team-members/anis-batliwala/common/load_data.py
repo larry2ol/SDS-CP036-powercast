@@ -36,6 +36,8 @@ def load_data(file_path, index_col=None, fill_method='ffill'):
   # Convert to datetime in one operation
   datetime_series = pd.to_datetime(dataset[index_col], errors='coerce')
   
+  dataset['DateTime_Copy'] = datetime_series  # Temporary column to avoid SettingWithCopyWarning
+
   # Filter valid rows before sorting (more efficient)
   valid_mask = datetime_series.notna()
   dataset = dataset[valid_mask].copy()  # Copy to avoid SettingWithCopyWarning
