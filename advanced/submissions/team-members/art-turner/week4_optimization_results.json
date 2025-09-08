@@ -1,0 +1,1586 @@
+[
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.008375405667092257,
+    "test_r2": 0.9810726443926493,
+    "test_rmse": 533.1699818772445,
+    "test_mae": 433.46828206380206,
+    "param_count": 33123,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.012787717515678426,
+    "test_r2": 0.9475429058074951,
+    "test_rmse": 957.9882421538583,
+    "test_mae": 747.1756795247396,
+    "param_count": 82627,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.038708132305523245,
+    "test_r2": 0.6331931352615356,
+    "test_rmse": 2599.539283675384,
+    "test_mae": 2158.021484375,
+    "param_count": 33123,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.02905098561621536,
+    "test_r2": 0.760249118010203,
+    "test_rmse": 2089.5728881902255,
+    "test_mae": 1791.7077229817708,
+    "param_count": 82627,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.0063269701483470156,
+    "test_r2": 0.990896463394165,
+    "test_rmse": 410.3582484741448,
+    "test_mae": 322.9454854329427,
+    "param_count": 123587,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.013299196367947066,
+    "test_r2": 0.8932478626569113,
+    "test_rmse": 1157.451605422823,
+    "test_mae": 956.0939331054688,
+    "param_count": 312707,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.030040829813456148,
+    "test_r2": 0.8445507685343424,
+    "test_rmse": 1861.5276597421973,
+    "test_mae": 1520.4333089192708,
+    "param_count": 123587,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.021208313687484923,
+    "test_r2": 0.9005069732666016,
+    "test_rmse": 1442.0249384461404,
+    "test_mae": 1112.2559407552083,
+    "param_count": 312707,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006468699665785563,
+    "test_r2": 0.9901479283968607,
+    "test_rmse": 407.5137756788108,
+    "test_mae": 298.5159606933594,
+    "param_count": 476547,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.01070520468056202,
+    "test_r2": 0.9456658562024435,
+    "test_rmse": 906.5797763246437,
+    "test_mae": 721.5599263509115,
+    "param_count": 1215235,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0331919438440383,
+    "test_r2": 0.8423476020495096,
+    "test_rmse": 1818.8749259576507,
+    "test_mae": 1442.4304606119792,
+    "param_count": 476547,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0166251403544613,
+    "test_r2": 0.9243427515029907,
+    "test_rmse": 1174.3834584813915,
+    "test_mae": 849.1510416666666,
+    "param_count": 1215235,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.011355678217742986,
+    "test_r2": 0.9619201024373373,
+    "test_rmse": 709.3573669230394,
+    "test_mae": 583.5237935384115,
+    "param_count": 136035,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.014727409474733399,
+    "test_r2": 0.8874339461326599,
+    "test_rmse": 1278.6343616053896,
+    "test_mae": 1020.1641235351562,
+    "param_count": 353987,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0438589024683082,
+    "test_r2": 0.6135923663775126,
+    "test_rmse": 2866.4979989991716,
+    "test_mae": 2449.1045735677085,
+    "param_count": 136035,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.029080219294239835,
+    "test_r2": 0.7644163370132446,
+    "test_rmse": 2102.0395950249654,
+    "test_mae": 1775.6999104817708,
+    "param_count": 353987,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.009793562473865544,
+    "test_r2": 0.949932853380839,
+    "test_rmse": 826.4849283295812,
+    "test_mae": 693.9634195963541,
+    "param_count": 526019,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.01611421885710906,
+    "test_r2": 0.8483527501424154,
+    "test_rmse": 1466.8252870975132,
+    "test_mae": 1213.8989664713542,
+    "param_count": 1379715,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.043498682236768366,
+    "test_r2": 0.5849290092786154,
+    "test_rmse": 2724.1242665434816,
+    "test_mae": 2342.424072265625,
+    "param_count": 526019,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "LSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.024794397799949335,
+    "test_r2": 0.7991579373677572,
+    "test_rmse": 1937.4311188759036,
+    "test_mae": 1589.5142008463542,
+    "param_count": 1379715,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08932543785227992,
+    "test_r2": -0.5297421415646871,
+    "test_rmse": 4743.858296075464,
+    "test_mae": 4263.076985677083,
+    "param_count": 539907,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.09922693394185082,
+    "test_r2": -0.7304848432540894,
+    "test_rmse": 5254.1661353754325,
+    "test_mae": 4593.233072916667,
+    "param_count": 539907,
+    "converged_epoch": 25
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0705331601202488,
+    "test_r2": -0.15706084171930948,
+    "test_rmse": 4379.492372047978,
+    "test_mae": 4029.6220703125,
+    "param_count": 538947,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08728987475236256,
+    "test_r2": -0.35723374287287396,
+    "test_rmse": 4553.603406748288,
+    "test_mae": 4082.8672688802085,
+    "param_count": 538947,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0910940408040353,
+    "test_r2": -0.5402436057726542,
+    "test_rmse": 4920.383197623453,
+    "test_mae": 4351.177083333333,
+    "param_count": 539907,
+    "converged_epoch": 29
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.10586773283113309,
+    "test_r2": -0.9525007208188375,
+    "test_rmse": 5744.971288298236,
+    "test_mae": 4967.404622395833,
+    "param_count": 539907,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08624113953816212,
+    "test_r2": -0.6058720946311951,
+    "test_rmse": 4885.6471788537665,
+    "test_mae": 4419.167724609375,
+    "param_count": 538947,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08519010818222673,
+    "test_r2": -0.5550041198730469,
+    "test_rmse": 4865.571097268,
+    "test_mae": 4418.894124348958,
+    "param_count": 538947,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08715226422480452,
+    "test_r2": -0.6932848691940308,
+    "test_rmse": 4887.49751519671,
+    "test_mae": 4418.055582682292,
+    "param_count": 139779,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.09859993217921839,
+    "test_r2": -0.6602561473846436,
+    "test_rmse": 5184.699842894867,
+    "test_mae": 4508.5390625,
+    "param_count": 139779,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.07954297235947315,
+    "test_r2": -0.42531388998031616,
+    "test_rmse": 4712.219109366676,
+    "test_mae": 4265.71875,
+    "param_count": 139299,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.2,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.09287722493574871,
+    "test_r2": -0.7764891386032104,
+    "test_rmse": 5132.114655751084,
+    "test_mae": 4634.433186848958,
+    "param_count": 139299,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.10541686285438577,
+    "test_r2": -0.7510211865107218,
+    "test_rmse": 5531.523088095563,
+    "test_mae": 4756.199381510417,
+    "param_count": 139779,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.10311826506281287,
+    "test_r2": -0.6745636065800985,
+    "test_rmse": 5396.131187121162,
+    "test_mae": 4673.216959635417,
+    "param_count": 139779,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08740603514924282,
+    "test_r2": -0.5789470076560974,
+    "test_rmse": 5008.177758966153,
+    "test_mae": 4424.789469401042,
+    "param_count": 139299,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "DeepLSTM",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32,
+        16
+      ],
+      "dropout_rate": 0.3,
+      "layer_norm": false
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.09188260422731803,
+    "test_r2": -0.5762117107709249,
+    "test_rmse": 5109.13393814797,
+    "test_mae": 4447.419514973958,
+    "param_count": 139299,
+    "converged_epoch": 28
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.007739722138134445,
+    "test_r2": 0.9897507826487223,
+    "test_rmse": 490.3686275687954,
+    "test_mae": 375.6689860026042,
+    "param_count": 24867,
+    "converged_epoch": 22
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.009005474509686475,
+    "test_r2": 0.980789323647817,
+    "test_rmse": 595.4348639122481,
+    "test_mae": 461.98280843098956,
+    "param_count": 62019,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.022635138396749167,
+    "test_r2": 0.9180866877237955,
+    "test_rmse": 1248.4145436497913,
+    "test_mae": 997.3050333658854,
+    "param_count": 24867,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.02302709596640453,
+    "test_r2": 0.8982367118199667,
+    "test_rmse": 1574.3903416937617,
+    "test_mae": 1374.9533284505208,
+    "param_count": 62019,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006227698866126499,
+    "test_r2": 0.9911429286003113,
+    "test_rmse": 408.7628264046654,
+    "test_mae": 308.72430928548175,
+    "param_count": 92739,
+    "converged_epoch": 28
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.007685531184410419,
+    "test_r2": 0.989879826704661,
+    "test_rmse": 477.17385955794094,
+    "test_mae": 348.2818094889323,
+    "param_count": 234627,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.018081895068166702,
+    "test_r2": 0.9575774272282919,
+    "test_rmse": 995.777168354074,
+    "test_mae": 747.3863321940104,
+    "param_count": 92739,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.01596478684010302,
+    "test_r2": 0.9607440829277039,
+    "test_rmse": 922.8560177524778,
+    "test_mae": 723.5290730794271,
+    "param_count": 234627,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.0057207055984261805,
+    "test_r2": 0.9933161536852518,
+    "test_rmse": 381.45469815988395,
+    "test_mae": 288.018798828125,
+    "param_count": 357507,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006326207557950563,
+    "test_r2": 0.991043488184611,
+    "test_rmse": 415.0751007240281,
+    "test_mae": 300.71607462565106,
+    "param_count": 911619,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.016322951665435865,
+    "test_r2": 0.963469942410787,
+    "test_rmse": 895.7775109664522,
+    "test_mae": 654.46142578125,
+    "param_count": 357507,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.012335585680131505,
+    "test_r2": 0.9770283301671346,
+    "test_rmse": 716.1774568012579,
+    "test_mae": 520.7365315755209,
+    "param_count": 911619,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.007267859590247395,
+    "test_r2": 0.9840918382008871,
+    "test_rmse": 541.2692310638135,
+    "test_mae": 440.2662862141927,
+    "param_count": 102051,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.007735697336767505,
+    "test_r2": 0.9863537748654684,
+    "test_rmse": 485.5824296560849,
+    "test_mae": 361.26869710286456,
+    "param_count": 265539,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.023410832607830927,
+    "test_r2": 0.9170538385709127,
+    "test_rmse": 1408.1412100871623,
+    "test_mae": 1140.5480346679688,
+    "param_count": 102051,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.019744540685863513,
+    "test_r2": 0.9374264280001322,
+    "test_rmse": 1158.663499102309,
+    "test_mae": 921.7033894856771,
+    "param_count": 265539,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006201350947887432,
+    "test_r2": 0.9916602373123169,
+    "test_rmse": 392.9977924489387,
+    "test_mae": 292.483159383138,
+    "param_count": 394563,
+    "converged_epoch": 29
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.1,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.0001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.0074871365147514074,
+    "test_r2": 0.9881346027056376,
+    "test_rmse": 493.7833179678451,
+    "test_mae": 367.1857401529948,
+    "param_count": 1034883,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.2,
+      "bidirectional": false
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.01855367659098976,
+    "test_r2": 0.9405530293782552,
+    "test_rmse": 1132.713093655333,
+    "test_mae": 868.5699666341146,
+    "param_count": 394563,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "GRU",
+    "model_params": {
+      "hidden_sizes": [
+        256,
+        128,
+        64
+      ],
+      "dropout_rate": 0.3,
+      "bidirectional": true
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.014702995512180211,
+    "test_r2": 0.9643962780634562,
+    "test_rmse": 862.6688031996737,
+    "test_mae": 647.3895263671875,
+    "param_count": 1034883,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 2,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006652402619611684,
+    "test_r2": 0.9901335040728251,
+    "test_rmse": 412.5005935978451,
+    "test_mae": 310.4394836425781,
+    "param_count": 70595,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 2,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.05365035336131487,
+    "test_r2": 0.3703491489092509,
+    "test_rmse": 3393.93645909413,
+    "test_mae": 3057.485107421875,
+    "param_count": 70595,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 2,
+      "dropout_rate": 0.2
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.007909096713079428,
+    "test_r2": 0.9801268180211385,
+    "test_rmse": 639.1830072865984,
+    "test_mae": 524.7153116861979,
+    "param_count": 70595,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 2,
+      "dropout_rate": 0.3
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0336842365502342,
+    "test_r2": 0.7222094535827637,
+    "test_rmse": 2599.2531263197725,
+    "test_mae": 2303.3177490234375,
+    "param_count": 70595,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 3,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006994179972424739,
+    "test_r2": 0.9861103693644205,
+    "test_rmse": 483.8493946815668,
+    "test_mae": 392.50635782877606,
+    "param_count": 103875,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 3,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08207765015644755,
+    "test_r2": -0.22117849191029867,
+    "test_rmse": 4352.300056031945,
+    "test_mae": 3941.3106282552085,
+    "param_count": 103875,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 3,
+      "dropout_rate": 0.2
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.008293005096445965,
+    "test_r2": 0.9892910122871399,
+    "test_rmse": 460.79541671572844,
+    "test_mae": 340.4192199707031,
+    "param_count": 103875,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 64,
+      "num_layers": 3,
+      "dropout_rate": 0.3
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.0662643640960862,
+    "test_r2": 0.10585651795069377,
+    "test_rmse": 3890.105361311482,
+    "test_mae": 3508.0748697916665,
+    "param_count": 103875,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 2,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006510190059983633,
+    "test_r2": 0.9907939235369364,
+    "test_rmse": 435.76653633063825,
+    "test_mae": 326.88926188151044,
+    "param_count": 272259,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 2,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.04211427118417209,
+    "test_r2": 0.5391652385393778,
+    "test_rmse": 3169.4467176574176,
+    "test_mae": 2856.4497884114585,
+    "param_count": 272259,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 2,
+      "dropout_rate": 0.2
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006804924840637581,
+    "test_r2": 0.987768272558848,
+    "test_rmse": 449.43991481637994,
+    "test_mae": 329.63983662923175,
+    "param_count": 272259,
+    "converged_epoch": 29
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 2,
+      "dropout_rate": 0.3
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.03070348757887032,
+    "test_r2": 0.7860915660858154,
+    "test_rmse": 2376.5868050619265,
+    "test_mae": 2112.7223307291665,
+    "param_count": 272259,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 3,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006350182913001475,
+    "test_r2": 0.9926510055859884,
+    "test_rmse": 397.85128446144034,
+    "test_mae": 300.15281168619794,
+    "param_count": 404355,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 3,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.08641125228467995,
+    "test_r2": -0.3762422204017639,
+    "test_rmse": 4401.188148637173,
+    "test_mae": 3981.7958984375,
+    "param_count": 404355,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 3,
+      "dropout_rate": 0.2
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006899813333965414,
+    "test_r2": 0.9888335665067037,
+    "test_rmse": 424.83154232922016,
+    "test_mae": 320.6286112467448,
+    "param_count": 404355,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 128,
+      "num_layers": 3,
+      "dropout_rate": 0.3
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.06487781930018247,
+    "test_r2": 0.12497977415720622,
+    "test_rmse": 3776.060454833128,
+    "test_mae": 3394.5576985677085,
+    "param_count": 404355,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 256,
+      "num_layers": 2,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.006265011108745404,
+    "test_r2": 0.9904957214991251,
+    "test_rmse": 381.3117840836785,
+    "test_mae": 279.0550079345703,
+    "param_count": 1068803,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 256,
+      "num_layers": 2,
+      "dropout_rate": 0.1
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.047737061629086974,
+    "test_r2": 0.5012619098027548,
+    "test_rmse": 3141.6105441052932,
+    "test_mae": 2821.8687337239585,
+    "param_count": 1068803,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 256,
+      "num_layers": 2,
+      "dropout_rate": 0.2
+    },
+    "train_params": {
+      "learning_rate": 0.0005,
+      "optimizer": "adam"
+    },
+    "best_val_loss": 0.0061387660330146305,
+    "test_r2": 0.9941256443659464,
+    "test_rmse": 343.4457664431772,
+    "test_mae": 242.9648691813151,
+    "param_count": 1068803,
+    "converged_epoch": 30
+  },
+  {
+    "model_name": "AttentionLSTM",
+    "model_params": {
+      "hidden_size": 256,
+      "num_layers": 2,
+      "dropout_rate": 0.3
+    },
+    "train_params": {
+      "learning_rate": 0.001,
+      "optimizer": "adamw"
+    },
+    "best_val_loss": 0.02675141580402851,
+    "test_r2": 0.8409793376922607,
+    "test_rmse": 2006.9101618473535,
+    "test_mae": 1761.3959554036458,
+    "param_count": 1068803,
+    "converged_epoch": 30
+  }
+]

@@ -59,8 +59,7 @@ def create_optimized_bilstm_configs():
                     'learning_rate': lr,
                     'model_params': {
                         'hidden_sizes': hidden_sizes,
-                        'dropout_rate': dropout,
-                        'bidirectional': True
+                        'dropout_rate': dropout
                     }
                 })
                 configs.append(config)
@@ -188,8 +187,8 @@ def evaluate_model(model, test_loader, target_scaler, device='cpu'):
     predictions_torch = torch.FloatTensor(predictions)
     targets_torch = torch.FloatTensor(targets)
     
-    metrics = metrics_calc.compute_comprehensive_metrics(
-        predictions_torch, targets_torch
+    metrics = metrics_calc.calculate_all_metrics(
+        targets, predictions
     )
     
     return metrics, predictions_denorm, targets_denorm
@@ -278,13 +277,12 @@ def run_quick_optimization():
             )
             
             # Log metrics
-            overall_metrics = metrics['overall']
             mlflow.log_metrics({
                 'val_loss': best_val_loss,
-                'test_rmse': overall_metrics['rmse'],
-                'test_mae': overall_metrics['mae'],
-                'test_r2': overall_metrics['r2'],
-                'test_mape': overall_metrics['mape']
+                'test_rmse': metrics['RMSE_Overall'],
+                'test_mae': metrics['MAE_Overall'],
+                'test_r2': metrics['R2_Overall'],
+                'test_mape': metrics['MAPE_Overall']
             })
             
             # Log training curves
@@ -309,10 +307,10 @@ def run_quick_optimization():
             }
             results.append(result)
             
-            print(f"      R² = {overall_metrics['r2']:.4f}, RMSE = {overall_metrics['rmse']:.1f}")
+            print(f"      R² = {metrics['R2_Overall']:.4f}, RMSE = {metrics['RMSE_Overall']:.1f}")
     
     # Find best model
-    best_result = max(results, key=lambda x: x['metrics']['overall']['r2'])
+    best_result = max(results, key=lambda x: x['metrics']['R2_Overall'])
     
     print(f"\n" + "=" * 60)
     print("OPTIMIZATION COMPLETE")
@@ -324,27 +322,27 @@ def run_quick_optimization():
     print(f"Dropout: {best_result['config']['dropout_rate']}")
     print()
     
-    best_metrics = best_result['metrics']['overall']
+    best_metrics = best_result['metrics']
     print("Performance:")
-    print(f"  R² = {best_metrics['r2']:.4f}")
-    print(f"  RMSE = {best_metrics['rmse']:.1f}")
-    print(f"  MAE = {best_metrics['mae']:.1f}")
-    print(f"  MAPE = {best_metrics['mape']:.1f}%")
+    print(f"  R² = {best_metrics['R2_Overall']:.4f}")
+    print(f"  RMSE = {best_metrics['RMSE_Overall']:.1f}")
+    print(f"  MAE = {best_metrics['MAE_Overall']:.1f}")
+    print(f"  MAPE = {best_metrics['MAPE_Overall']:.1f}%")
     
     print(f"\nBest model saved as: {best_result['model_path']}")
     
     # Save optimization results
     optimization_summary = {
-        'best_config_id': best_result['config_id'],
+        'best_config_id': int(best_result['config_id']),
         'best_model_path': best_result['model_path'],
-        'best_metrics': best_result['metrics'],
+        'best_metrics': {k: float(v) for k, v in best_result['metrics'].items()},
         'all_results': [{
-            'config_id': r['config_id'],
+            'config_id': int(r['config_id']),
             'hidden_sizes': r['config']['hidden_sizes'],
-            'learning_rate': r['config']['learning_rate'],
-            'dropout_rate': r['config']['dropout_rate'],
-            'r2': r['metrics']['overall']['r2'],
-            'rmse': r['metrics']['overall']['rmse']
+            'learning_rate': float(r['config']['learning_rate']),
+            'dropout_rate': float(r['config']['dropout_rate']),
+            'r2': float(r['metrics']['R2_Overall']),
+            'rmse': float(r['metrics']['RMSE_Overall'])
         } for r in results]
     }
     

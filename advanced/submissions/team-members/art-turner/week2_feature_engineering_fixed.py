@@ -65,11 +65,13 @@ def main():
     # Define features and targets
     env_features = ['Temperature', 'Humidity', 'Wind Speed', 'general diffuse flows', 'diffuse flows']
     cyclical_features = ['hour_sin', 'hour_cos', 'dow_sin', 'dow_cos', 'month_sin', 'month_cos']
-    feature_cols = env_features + cyclical_features
+    # Include past power usage as autoregressive inputs by adding target columns to features
     target_cols = ['Zone 1 Power Consumption', 'Zone 2  Power Consumption', 'Zone 3  Power Consumption']
+    base_feature_cols = env_features + cyclical_features
+    feature_cols = base_feature_cols + target_cols
     
-    print(f"   Features: {len(feature_cols)} columns")
-    print(f"   Targets: {len(target_cols)} columns")
+    print(f"   Features: {len(feature_cols)} columns (includes autoregressive past power)")
+    print(f"   Targets: {len(target_cols)} columns (next step)")
     
     # Temporal splitting
     print("3. Temporal data splitting...")
@@ -88,15 +90,15 @@ def main():
     # CRITICAL FIX: Normalize both features AND targets
     print("4. Feature AND target normalization...")
     
-    # Feature normalization (as before)
+    # Feature normalization (env + cyclical only, not targets)
     feature_scaler = MinMaxScaler()
-    feature_scaler.fit(train_data[feature_cols])
+    feature_scaler.fit(train_data[base_feature_cols])
     
-    train_data[feature_cols] = feature_scaler.transform(train_data[feature_cols])
-    val_data[feature_cols] = feature_scaler.transform(val_data[feature_cols])
-    test_data[feature_cols] = feature_scaler.transform(test_data[feature_cols])
+    train_data[base_feature_cols] = feature_scaler.transform(train_data[base_feature_cols])
+    val_data[base_feature_cols] = feature_scaler.transform(val_data[base_feature_cols])
+    test_data[base_feature_cols] = feature_scaler.transform(test_data[base_feature_cols])
     
-    # NEW: Target normalization
+    # NEW: Target normalization (used for both learning target and as normalized inputs)
     target_scaler = MinMaxScaler()
     target_scaler.fit(train_data[target_cols])
     
@@ -185,9 +187,11 @@ def main():
     # Save metadata
     metadata = {
         'feature_cols': feature_cols,
+        'base_feature_cols': base_feature_cols,
         'target_cols': target_cols,
         'env_features': env_features,
         'cyclical_features': cyclical_features,
+        'uses_autoregressive_features': True,
         'lookback_window': lookback_window,
         'batch_size': batch_size,
         'train_size': len(train_sequences),
