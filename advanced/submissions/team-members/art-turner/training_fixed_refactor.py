@@ -10,8 +10,9 @@ from torch.utils.data import DataLoader
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 import mlflow
+from mlflow_utils import log_test_metrics, log_pytorch_model
 import mlflow.pytorch
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from typing import Dict, List, Tuple, Optional
@@ -19,8 +20,8 @@ import json
 import pickle
 import os
 from datetime import datetime
-import warnings
-warnings.filterwarnings('ignore')
+# import warnings
+# warnings.filterwarnings('ignore')
 
 from models import LSTMBaseline, GRUAlternative, TemporalConvNet, create_models, get_model_summary
 
@@ -221,11 +222,17 @@ class Trainer:
         
         # Learning rate scheduler
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.7, patience=patience//2
+            optimizer, mode='min', factor=0.7, patience=max(1, patience//2)
         )
         
-        # Start MLflow run
-        with mlflow.start_run():
+
+        # Start MLflow run with a unique name and capture its run_id
+        run_timestamp = getattr(self, 'session_id', datetime.now().strftime('%Y%m%d-%H%M%S'))
+        with mlflow.start_run(run_name=f"{self.model.__class__.__name__}-{run_timestamp}") as _run:
+            run_id = _run.info.run_id
+            # Group runs by session (if provided from main())
+            mlflow.set_tag("session_id", getattr(self, "session_id", "n/a"))
+
             # Log parameters
             mlflow.log_param("model_type", self.model.__class__.__name__)
             mlflow.log_param("num_epochs", num_epochs)
@@ -261,7 +268,9 @@ class Trainer:
                 # Check for improvement
                 if val_loss < self.best_val_loss:
                     self.best_val_loss = val_loss
-                    self.best_model_state = self.model.state_dict().copy()
+#                   self.best_model_state = self.model.state_dict().copy()
+                    # deep-copy weights to CPU to avoid aliasing / VRAM retention
+                    self.best_model_state = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()}
                     epochs_without_improvement = 0
                 else:
                     epochs_without_improvement += 1
@@ -276,8 +285,8 @@ class Trainer:
                 mlflow.log_metric("train_loss", train_loss, step=epoch)
                 mlflow.log_metric("val_loss", val_loss, step=epoch)
                 for metric_name, metric_value in val_metrics.items():
-                    mlflow.log_metric(f"val_{metric_name.lower()}", metric_value, step=epoch)
-                
+#                   mlflow.log_metric(f"val_{metric_name.lower()}", metric_value, step=epoch)
+                    mlflow.log_metric(f"val_{metric_name.lower()}", float(metric_value), step=epoch)
                 # Early stopping
                 if epochs_without_improvement >= patience:
                     print(f"Early stopping at epoch {epoch+1}")
@@ -289,21 +298,45 @@ class Trainer:
             
             # Final evaluation on test set
             test_results = self.evaluate_test_set()
+
+            # Metrics
+            log_test_metrics(test_results.get("metrics", {}), prefix="test_")
+
+            # Optional traceability (git tagging removed for Colab compatibility)
+
+            # Save best model as .pth file for analysis
+            model_filename = f"best_{self.model.__class__.__name__.lower()}_{run_timestamp}.pth"
             
-            # Log final metrics
-            for metric_name, metric_value in test_results['metrics'].items():
-                mlflow.log_metric(f"test_{metric_name.lower()}", metric_value)
+            # Extract model configuration for reconstruction
+            model_config = self._extract_model_config(self.model)
             
-            # Save model (using newer syntax to avoid warnings)
-            import warnings
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=UserWarning)
-                mlflow.pytorch.log_model(
-                    self.model, 
-                    artifact_path="model",
-                    pip_requirements=None
-                )
+            torch.save({
+                'model_state_dict': self.best_model_state,
+                'model_class': self.model.__class__.__name__,
+                'model_config': model_config,
+                'test_metrics': test_results['metrics'],
+                'best_val_loss': self.best_val_loss,
+                'training_config': {
+                    'num_epochs': num_epochs,
+                    'learning_rate': learning_rate,
+                    'criterion': criterion,
+                    'optimizer_type': optimizer_type,
+                    'patience': patience
+                }
+            }, model_filename)
+            print(f"Best model saved as: {model_filename}")
             
+            # Log the model to MLflow (handles name=..., signature, CUDA pip reqs)
+            log_pytorch_model(
+                model=self.model,
+                name="model",                      # replaces artifact_path
+                loader=self.test_loader,           # used to build a tiny CPU input_example
+                fallback_shape=(1, 36, 11),        # (batch, seq_len, features) for power data
+                # registered_model_name="my-registry-name",  # optional
+            )
+            
+            # Log .pth file as artifact
+            mlflow.log_artifact(model_filename)
             print(f"\nTraining completed!")
             print(f"Best validation loss: {self.best_val_loss:.4f}")
             print(f"Test R² Overall: {test_results['metrics']['R2_Overall']:.3f}")
@@ -314,7 +347,9 @@ class Trainer:
                 'val_losses': self.val_losses,
                 'best_val_loss': self.best_val_loss,
                 'test_results': test_results,
-                'model_state': self.best_model_state
+                'model_state': self.best_model_state,
+                'mlflow_run_id': run_id,  # <- return the run id so we can safely log artifacts later
+                'model_filename': model_filename,  # <- add model filename to results
             }
     
     def evaluate_test_set(self) -> Dict:
@@ -349,6 +384,40 @@ class Trainer:
             'targets_norm': targets,           # Normalized for loss calculation
             'metrics': metrics
         }
+    
+    def _extract_model_config(self, model):
+        """Extract model configuration for checkpoint saving"""
+        config = {}
+        
+        # Get model class name
+        model_class_name = model.__class__.__name__
+        
+        # Extract configuration based on model type
+        if hasattr(model, 'hidden_size') and hasattr(model, 'num_layers'):
+            # AttentionLSTM
+            config = {
+                'hidden_size': model.hidden_size,
+                'num_layers': model.num_layers,
+                'dropout_rate': getattr(model, 'dropout', 0.2)
+            }
+        elif hasattr(model, 'hidden_sizes'):
+            # LSTM, GRU, BiLSTM variants
+            config = {
+                'hidden_sizes': model.hidden_sizes,
+                'dropout_rate': getattr(model, 'dropout_rate', 0.2)
+            }
+            if hasattr(model, 'layer_norm'):
+                config['layer_norm'] = model.layer_norm
+        elif hasattr(model, 'num_channels'):
+            # TCN variants
+            config = {
+                'num_channels': model.num_channels,
+                'dropout': getattr(model, 'dropout', 0.2)
+            }
+            if hasattr(model, 'use_attention'):
+                config['use_attention'] = model.use_attention
+        
+        return config
 
 
 class Visualizer:
@@ -370,7 +439,7 @@ class Visualizer:
         
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.show()
+        plt.close()
     
     @staticmethod
     def plot_predictions_vs_actual(targets: np.ndarray, 
@@ -406,7 +475,7 @@ class Visualizer:
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.show()
+        plt.close()
     
     @staticmethod
     def plot_time_series_forecast(targets: np.ndarray, 
@@ -437,7 +506,7 @@ class Visualizer:
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.show()
+        plt.close()
 
 
 def load_preprocessed_fixed_data() -> Tuple[DataLoader, DataLoader, DataLoader, Dict, object]:
@@ -495,6 +564,10 @@ def main():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
+
+    
+    # Create a session id so this whole program invocation is grouped and filenames are unique
+    session_id = datetime.now().strftime('%Y%m%d-%H%M%S')
     
     # Load FIXED data
     train_loader, val_loader, test_loader, metadata, target_scaler = load_preprocessed_fixed_data()
@@ -543,9 +616,11 @@ def main():
             test_loader=test_loader,
             target_scaler=target_scaler,  # CRITICAL for proper evaluation
             device=device,
-            experiment_name=f"power_forecasting_fixed_{model_name.lower()}"
+            experiment_name=f"power_forecasting_fixed_{model_name.lower()}_refactor"
         )
-        
+        # Pass session context to the trainer so the run can be tagged
+        trainer.session_id = session_id
+
         # Train model
         result = trainer.train(**training_config)
         results[model_name] = result
@@ -553,28 +628,39 @@ def main():
         # Visualizations
         print("Creating visualizations...")
         
+        # Use the run_id from training to make filenames unique and log into the same run
+        run_id = result.get("mlflow_run_id")
+
         # Training history
         Visualizer.plot_training_history(
             result['train_losses'], 
             result['val_losses'],
-            save_path=f'{model_name}_training_history.png'
+            save_path=f'{model_name}_training_history_{run_id}.png'
         )
-        
+        # Reopen the same MLflow run to attach artifacts
+        with mlflow.start_run(run_id=run_id):
+             mlflow.log_artifact(f'{model_name}_training_history_{run_id}.png')
+
         # Predictions vs actual (using denormalized values)
         test_results = result['test_results']
         Visualizer.plot_predictions_vs_actual(
             test_results['targets'],        # Already denormalized
             test_results['predictions'],    # Already denormalized
-            save_path=f'{model_name}_predictions_vs_actual.png'
+            save_path=f'{model_name}_predictions_vs_actual_{run_id}.png'
         )
-        
+
+        with mlflow.start_run(run_id=run_id):
+            mlflow.log_artifact(f'{model_name}_predictions_vs_actual_{run_id}.png')
+
         # Time series forecast
         Visualizer.plot_time_series_forecast(
             test_results['targets'],
             test_results['predictions'],
-            save_path=f'{model_name}_time_series_forecast.png'
+            save_path=f'{model_name}_time_series_forecast_{run_id}.png'
         )
-    
+        with mlflow.start_run(run_id=run_id):
+            mlflow.log_artifact(f'{model_name}_time_series_forecast_{run_id}.png')
+
     # Compare models
     print(f"\n{'='*60}")
     print("FIXED MODEL COMPARISON")
@@ -596,10 +682,18 @@ def main():
     
     print(comparison_df.to_string(index=False, float_format='%.4f'))
     
-    # Save comparison
-    comparison_df.to_csv('model_comparison_fixed.csv', index=False)
-    
-    print(f"\nFIXED training completed! Results saved to MLflow and local files.")
+    # Save comparison with a session-specific filename so it never overwrites
+    comp_path = f'model_comparison_fixed_{session_id}.csv'
+    comparison_df.to_csv(comp_path, index=False)
+    # (Optional) attach it to the last model's run as a convenience
+    if results:
+        last_run_id = results[list(results.keys())[-1]].get("mlflow_run_id")
+        if last_run_id:
+            with mlflow.start_run(run_id=last_run_id):
+                mlflow.log_artifact(comp_path)
+ 
+    print(f"\nFIXED training completed! Results saved to MLflow and local files (session {session_id}).")
+
     print("Expected improvement: RNN models should now have positive R² scores!")
     
     return results

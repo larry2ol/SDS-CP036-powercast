@@ -5,6 +5,7 @@ Runs interpretability analysis, error pattern analysis, and generates comprehens
 
 import torch
 import numpy as np
+import pandas as pd
 import json
 from pathlib import Path
 import argparse

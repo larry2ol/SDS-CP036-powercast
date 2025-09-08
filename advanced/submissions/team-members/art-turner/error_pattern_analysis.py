@@ -433,9 +433,15 @@ def run_comprehensive_error_analysis(model_path, output_dir='error_analysis_resu
     test_sequences = np.load('test_sequences_fixed.npy')
     test_targets = np.load('test_targets_fixed.npy')
     
-    # Load model
-    model = torch.load(model_path, map_location='cpu')
-    model.eval()
+    # Load model using our checkpoint loader
+    from model_loader import load_model_from_checkpoint
+    
+    model, checkpoint_data = load_model_from_checkpoint(
+        model_path=model_path,
+        input_size=len(metadata['feature_cols']),
+        output_size=len(metadata['target_cols']),
+        device='cpu'
+    )
     
     print(f"   Model: {type(model).__name__}")
     print(f"   Test samples: {len(test_sequences)}")

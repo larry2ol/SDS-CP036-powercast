@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import mlflow
 import mlflow.pytorch
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
@@ -25,10 +24,10 @@ warnings.filterwarnings('ignore')
 # Import our models
 from models import LSTMBaseline, GRUAlternative, TemporalConvNet
 from advanced_models import (
-    BidirectionalLSTM, DeepLSTM, AttentionLSTM, AdvancedTCN, 
-    EnsembleModel, create_advanced_models
+    DeepLSTM, AttentionLSTM, AdvancedTCN,
+    EnsembleModel
 )
-from training_fixed import MetricsCalculator, Trainer, Visualizer
+from training_fixed_refactor import MetricsCalculator, Trainer, Visualizer
 
 
 class HyperparameterOptimizer:
@@ -51,7 +50,7 @@ class HyperparameterOptimizer:
     
     def optimize_lstm_variants(self, input_size: int, output_size: int):
         """Optimize LSTM and variants"""
-        print("🔍 Optimizing LSTM variants...")
+        print("Optimizing LSTM variants...")
         
         # LSTM hyperparameter grid
         lstm_grid = {
@@ -64,20 +63,12 @@ class HyperparameterOptimizer:
             ],
             'dropout_rate': [0.1, 0.2, 0.3],
             'learning_rate': [0.001, 0.0005, 0.0001],
-            'optimizer': ['adam', 'adamw']
+            'optimizer': ['adam', 'adamw'],
+            'bidirectional': [False, True]
         }
         
         # Standard LSTM
         self._grid_search('LSTM', LSTMBaseline, lstm_grid, input_size, output_size)
-        
-        # Bidirectional LSTM
-        bi_lstm_grid = {
-            'hidden_sizes': [[64, 32], [128, 64], [256, 128]],
-            'dropout_rate': [0.1, 0.2, 0.3],
-            'learning_rate': [0.001, 0.0005],
-            'optimizer': ['adam', 'adamw']
-        }
-        self._grid_search('BiLSTM', BidirectionalLSTM, bi_lstm_grid, input_size, output_size)
         
         # Deep LSTM (fewer configs due to complexity)
         deep_lstm_grid = {
@@ -89,42 +80,29 @@ class HyperparameterOptimizer:
         }
         self._grid_search('DeepLSTM', DeepLSTM, deep_lstm_grid, input_size, output_size)
     
-    def optimize_tcn_variants(self, input_size: int, output_size: int):
-        """Optimize TCN variants"""
-        print("🔍 Optimizing TCN variants...")
-        
-        # Standard TCN
-        tcn_grid = {
-            'num_channels': [
-                [32, 64, 32],
-                [64, 128, 64],
-                [128, 256, 128],
-                [64, 128, 256, 128],
-                [32, 64, 128, 64, 32]
+    def optimize_gru_variants(self, input_size: int, output_size: int):
+        """Optimize GRU variants"""
+        print("Optimizing GRU variants...")
+
+        gru_grid = {
+            'hidden_sizes': [
+                [64, 32],
+                [128, 64],
+                [256, 128],
+                [128, 64, 32],
+                [256, 128, 64]
             ],
-            'dropout': [0.1, 0.2, 0.3],
-            'kernel_size': [3, 5],
-            'learning_rate': [0.001, 0.0005],
-            'optimizer': ['adam', 'adamw']
+            'dropout_rate': [0.1, 0.2, 0.3],
+            'learning_rate': [0.001, 0.0005, 0.0001],
+            'optimizer': ['adam', 'adamw'],
+            'bidirectional': [False, True]
         }
-        self._grid_search('TCN', TemporalConvNet, tcn_grid, input_size, output_size)
-        
-        # Advanced TCN
-        adv_tcn_grid = {
-            'num_channels': [
-                [64, 128, 256, 128, 64],
-                [32, 64, 128, 256, 128, 64]
-            ],
-            'dropout': [0.2, 0.3],
-            'use_attention': [True, False],
-            'learning_rate': [0.0005, 0.0001],
-            'optimizer': ['adamw']
-        }
-        self._grid_search('AdvancedTCN', AdvancedTCN, adv_tcn_grid, input_size, output_size)
+
+        self._grid_search('GRU', GRUAlternative, gru_grid, input_size, output_size)
     
     def optimize_attention_models(self, input_size: int, output_size: int):
         """Optimize attention-based models"""
-        print("🔍 Optimizing attention models...")
+        print("Optimizing attention models...")
         
         attention_grid = {
             'hidden_size': [64, 128, 256],
@@ -209,12 +187,13 @@ class HyperparameterOptimizer:
                     'test_rmse': result['test_results']['metrics']['RMSE_Overall'],
                     'test_mae': result['test_results']['metrics']['MAE_Overall'],
                     'param_count': sum(p.numel() for p in model.parameters()),
-                    'converged_epoch': len(result['train_losses'])
+                    'converged_epoch': len(result['train_losses']),
+                    'model_filename': result.get('model_filename', 'N/A')  # Add model filename
                 }
                 
                 self.results.append(result_record)
                 
-                print(f"      Result: R² = {result_record['test_r2']:.3f}, "
+                print(f"      Result: R2 = {result_record['test_r2']:.3f}, "
                       f"RMSE = {result_record['test_rmse']:.1f}")
                 
             except Exception as e:
@@ -252,12 +231,12 @@ class EnsembleTrainer:
     
     def create_best_ensemble(self, best_configs: List[Dict], input_size: int, output_size: int):
         """Create ensemble from best individual models"""
-        print("🎯 Creating ensemble from best models...")
+        print("Creating ensemble from best models...")
         
         # Model class mapping
         model_classes = {
             'LSTM': LSTMBaseline,
-            'BiLSTM': BidirectionalLSTM,
+            'GRU': GRUAlternative,
             'DeepLSTM': DeepLSTM,
             'TCN': TemporalConvNet,
             'AdvancedTCN': AdvancedTCN,
@@ -378,9 +357,9 @@ def main():
     
     # Phase 2: Optimize TCN variants
     print(f"\n{'='*60}")
-    print("PHASE 2: TCN OPTIMIZATION")
+    print("PHASE 2: GRU OPTIMIZATION")
     print("="*60)
-    optimizer.optimize_tcn_variants(input_size, output_size)
+    optimizer.optimize_gru_variants(input_size, output_size)
     
     # Phase 3: Optimize attention models
     print(f"\n{'='*60}")
@@ -402,7 +381,7 @@ def main():
     results_df = pd.DataFrame([
         {
             'Model': result['model_name'],
-            'R²': result['test_r2'],
+            'R2': result['test_r2'],
             'RMSE': result['test_rmse'],
             'MAE': result['test_mae'],
             'Parameters': f"{result['param_count']:,}",
@@ -442,22 +421,24 @@ def main():
         final_results.append({
             'Model': result['model_name'],
             'Type': 'Individual',
-            'R²': result['test_r2'],
+            'R2': result['test_r2'],
             'RMSE': result['test_rmse'],
-            'Parameters': result['param_count']
+            'Parameters': result['param_count'],
+            'Model_File': result.get('model_filename', 'N/A')  # Add model filename
         })
     
     # Add ensemble
     final_results.append({
         'Model': 'Ensemble',
         'Type': 'Ensemble',
-        'R²': ensemble_result['test_results']['metrics']['R2_Overall'],
+        'R2': ensemble_result['test_results']['metrics']['R2_Overall'],
         'RMSE': ensemble_result['test_results']['metrics']['RMSE_Overall'],
-        'Parameters': sum(p.numel() for p in ensemble_model.parameters())
+        'Parameters': sum(p.numel() for p in ensemble_model.parameters()),
+        'Model_File': ensemble_result.get('model_filename', 'N/A')  # Add ensemble filename if available
     })
     
     final_df = pd.DataFrame(final_results)
-    final_df = final_df.sort_values('R²', ascending=False)
+    final_df = final_df.sort_values('R2', ascending=False)
     
     print(final_df.to_string(index=False, float_format='%.4f'))
     
@@ -465,7 +446,7 @@ def main():
     final_df.to_csv('week4_final_results.csv', index=False)
     
     print(f"\nWeek 4 optimization completed!")
-    print(f"Best single model: {final_df.iloc[0]['Model']} (R² = {final_df.iloc[0]['R²']:.4f})")
+    print(f"Best single model: {final_df.iloc[0]['Model']} (R2 = {final_df.iloc[0]['R2']:.4f})")
     
     return {
         'optimization_results': optimizer.results,
