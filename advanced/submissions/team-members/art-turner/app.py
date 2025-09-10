@@ -168,50 +168,90 @@ def load_model_and_scalers():
         logger.error(f"Error loading model components: {str(e)}")
         raise
 
-def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11) -> np.ndarray:
-    """Create realistic dummy time series data for demonstration"""
-    np.random.seed(42)  # For reproducible dummy data
+# Global simulation state
+simulation_state = {
+    "current_datetime": datetime(2024, 1, 1, 0, 0),  # Start simulation
+    "base_temperature": 20.0,
+    "seasonal_factor": 0.0,
+    "weather_trend": 0.0
+}
+
+def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11, advance_time: bool = True) -> np.ndarray:
+    """Create realistic time-progressing dummy time series data for simulation"""
+    global simulation_state
     
-    # Create realistic feature ranges based on the power consumption dataset
+    if advance_time:
+        # Advance simulation time by 6 hours for each prediction
+        simulation_state["current_datetime"] += timedelta(hours=6)
+        
+        # Update seasonal and weather trends
+        day_of_year = simulation_state["current_datetime"].timetuple().tm_yday
+        simulation_state["seasonal_factor"] = 10 * np.sin(2 * np.pi * day_of_year / 365.25)
+        simulation_state["weather_trend"] += np.random.normal(0, 0.5)
+        simulation_state["weather_trend"] = np.clip(simulation_state["weather_trend"], -5, 5)
+    
+    # Create realistic time-progressing feature data
     features = []
+    current_sim_time = simulation_state["current_datetime"]
     
     for i in range(n_timesteps):
+        # Calculate the timestamp for this data point (going back 36 hours from current time)
+        timestamp = current_sim_time - timedelta(hours=n_timesteps - i)
+        
         timestep_features = []
         
-        # Temperature (seasonal pattern)
-        temp = 20 + 10 * np.sin(i * 0.1) + np.random.normal(0, 2)
+        # Temperature with realistic seasonal and daily patterns
+        hour_of_day = timestamp.hour
+        day_of_year = timestamp.timetuple().tm_yday
+        
+        # Daily temperature cycle (cooler at night, warmer during day)
+        daily_temp_cycle = 5 * np.sin(2 * np.pi * (hour_of_day - 6) / 24)
+        # Seasonal temperature variation
+        seasonal_temp = 15 * np.sin(2 * np.pi * (day_of_year - 80) / 365.25)
+        # Base temperature with weather trend
+        base_temp = simulation_state["base_temperature"] + simulation_state["weather_trend"]
+        
+        temp = base_temp + seasonal_temp + daily_temp_cycle + np.random.normal(0, 1)
         timestep_features.append(temp)
         
-        # Humidity (60-80%)
-        humidity = 70 + 10 * np.random.normal(0, 1)
-        humidity = np.clip(humidity, 40, 90)
+        # Humidity (inversely related to temperature, with randomness)
+        humidity = 85 - (temp - 10) * 1.5 + np.random.normal(0, 5)
+        humidity = np.clip(humidity, 30, 95)
         timestep_features.append(humidity)
         
-        # Wind Speed (0-15 m/s)
-        wind_speed = 5 + 3 * np.random.exponential(1)
-        wind_speed = np.clip(wind_speed, 0, 15)
+        # Wind Speed (with some persistence and randomness)
+        base_wind = 3 + 2 * np.sin(2 * np.pi * day_of_year / 365.25)  # Seasonal wind
+        wind_speed = base_wind + np.random.exponential(2)
+        wind_speed = np.clip(wind_speed, 0, 20)
         timestep_features.append(wind_speed)
         
-        # Solar irradiance features (0-1000 W/m²)
-        general_diffuse = 400 + 200 * np.sin(i * 0.2) + np.random.normal(0, 50)
+        # Solar irradiance (realistic day/night cycle)
+        if 6 <= hour_of_day <= 18:  # Daytime
+            solar_angle = np.sin(np.pi * (hour_of_day - 6) / 12)
+            base_solar = 800 * solar_angle
+            # Seasonal variation (stronger in summer)
+            seasonal_solar_mult = 0.7 + 0.6 * np.sin(2 * np.pi * (day_of_year - 80) / 365.25)
+            general_diffuse = base_solar * seasonal_solar_mult + np.random.normal(0, 50)
+        else:  # Nighttime
+            general_diffuse = np.random.normal(0, 10)
+        
         general_diffuse = np.clip(general_diffuse, 0, 1000)
         timestep_features.append(general_diffuse)
         
-        diffuse = general_diffuse * 0.6 + np.random.normal(0, 20)
-        diffuse = np.clip(diffuse, 0, 800)
+        diffuse = general_diffuse * (0.4 + 0.2 * np.random.random()) + np.random.normal(0, 15)
+        diffuse = np.clip(diffuse, 0, min(800, general_diffuse))
         timestep_features.append(diffuse)
         
-        # Cyclical time features
-        hour = (i % 24) / 24 * 2 * np.pi
-        timestep_features.append(np.sin(hour))  # hour_sin
-        timestep_features.append(np.cos(hour))  # hour_cos
+        # Cyclical time features (based on actual simulation time)
+        hour_rad = 2 * np.pi * hour_of_day / 24
+        timestep_features.append(np.sin(hour_rad))  # hour_sin
+        timestep_features.append(np.cos(hour_rad))  # hour_cos
         
-        dow = (i // 24) % 7 / 7 * 2 * np.pi  
-        timestep_features.append(np.sin(dow))   # dow_sin
-        timestep_features.append(np.cos(dow))   # dow_cos
+        dow_rad = 2 * np.pi * timestamp.weekday() / 7
+        timestep_features.append(np.sin(dow_rad))   # dow_sin
+        timestep_features.append(np.cos(dow_rad))   # dow_cos
         
-        month = 6 + 3 * np.sin(i * 0.05)  # Simulated month variation
-        month_rad = month / 12 * 2 * np.pi
+        month_rad = 2 * np.pi * (timestamp.month - 1) / 12
         timestep_features.append(np.sin(month_rad))  # month_sin
         timestep_features.append(np.cos(month_rad))  # month_cos
         
@@ -415,7 +455,7 @@ async def read_root():
             <h1>⚡ Powercast Forecasting API</h1>
             <p>Advanced Power Consumption Prediction using AttentionLSTM</p>
             <div style="margin-top: 20px;">
-                <a href="/dashboard" class="button">📊 Standard Dashboard</a>
+                <a href="/dashboard" class="button">📊 Advanced Dashboard</a>
                 <a href="/advanced" class="button">🧠 AI Analytics Dashboard</a>
                 <a href="/docs" class="button">📖 API Documentation</a>
             </div>
@@ -709,7 +749,8 @@ async def predict(request: PredictionRequest):
                 "model_type": "AttentionLSTM",
                 "confidence": "high",
                 "input_shape": list(features_array.shape),
-                "normalized_input": request.normalize
+                "normalized_input": request.normalize,
+                "simulation_time": simulation_state["current_datetime"].strftime("%Y-%m-%d %H:%M") if 'simulation_state' in globals() else None
             },
             timestamp=datetime.now().isoformat(),
             input_data=features_array.tolist(),
@@ -913,6 +954,46 @@ async def get_global_feature_importance():
     except Exception as e:
         logger.error(f"Feature importance error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Feature importance failed: {str(e)}")
+
+@app.get("/simulation-status")
+async def get_simulation_status():
+    """Get current simulation time and progress"""
+    return {
+        "current_datetime": simulation_state["current_datetime"].isoformat(),
+        "current_formatted": simulation_state["current_datetime"].strftime("%B %d, %Y at %H:%M"),
+        "day_of_year": simulation_state["current_datetime"].timetuple().tm_yday,
+        "season": get_season_name(simulation_state["current_datetime"]),
+        "weather_trend": simulation_state["weather_trend"],
+        "base_temperature": simulation_state["base_temperature"],
+        "next_prediction_time": (simulation_state["current_datetime"] + timedelta(hours=6)).strftime("%H:%M")
+    }
+
+@app.post("/reset-simulation")
+async def reset_simulation():
+    """Reset the simulation to start from a specific date"""
+    global simulation_state
+    simulation_state = {
+        "current_datetime": datetime(2024, 1, 1, 0, 0),
+        "base_temperature": 20.0,
+        "seasonal_factor": 0.0,
+        "weather_trend": 0.0
+    }
+    return {
+        "message": "Simulation reset to January 1, 2024",
+        "current_datetime": simulation_state["current_datetime"].isoformat()
+    }
+
+def get_season_name(dt):
+    """Get season name from datetime"""
+    month = dt.month
+    if month in [12, 1, 2]:
+        return "Winter"
+    elif month in [3, 4, 5]:
+        return "Spring"
+    elif month in [6, 7, 8]:
+        return "Summer"
+    else:
+        return "Fall"
 
 if __name__ == "__main__":
     uvicorn.run(

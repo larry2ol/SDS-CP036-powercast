@@ -475,6 +475,11 @@
                     <span id="status-text">System Ready</span>
                 </div>
                 <div class="control-group">
+                    <div id="simulation-status" style="text-align: center; margin-right: 20px;">
+                        <div id="sim-datetime" style="font-weight: bold; color: #667eea;">Loading simulation...</div>
+                        <div id="sim-season" style="font-size: 0.9em; color: #666;"></div>
+                    </div>
+                    <button class="btn" onclick="resetSimulation()" style="margin-right: 15px;">🔄 Reset Simulation</button>
                     <span>Real-time Mode:</span>
                     <div class="toggle-switch" id="realtime-toggle" onclick="toggleRealTime()">
                         <div class="toggle-slider"></div>
@@ -690,6 +695,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeCharts();
             loadModelInfo();
+            loadSimulationStatus();
             updateStatus('healthy', 'System Ready');
         });
         
@@ -936,6 +942,9 @@
                     await visualizeInput(data.input_data);
                 }
                 
+                // Update simulation status to show progression
+                await loadSimulationStatus();
+                
                 updateStatus('healthy', 'Prediction with analysis complete');
                 
             } catch (error) {
@@ -991,6 +1000,39 @@
             }
         }
         
+        // Simulation management
+        async function loadSimulationStatus() {
+            try {
+                const response = await fetch('/simulation-status');
+                const data = await response.json();
+                
+                document.getElementById('sim-datetime').textContent = data.current_formatted;
+                document.getElementById('sim-season').textContent = `${data.season} • Next prediction at ${data.next_prediction_time}`;
+                
+            } catch (error) {
+                console.error('Failed to load simulation status:', error);
+                document.getElementById('sim-datetime').textContent = 'Simulation Status Error';
+            }
+        }
+        
+        async function resetSimulation() {
+            try {
+                updateStatus('loading', 'Resetting simulation...');
+                
+                const response = await fetch('/reset-simulation', { method: 'POST' });
+                const data = await response.json();
+                
+                // Clear prediction history and charts
+                clearHistory();
+                await loadSimulationStatus();
+                
+                updateStatus('healthy', 'Simulation reset to January 2024');
+                
+            } catch (error) {
+                updateStatus('error', `Simulation reset failed: ${error.message}`);
+            }
+        }
+        
         // Batch prediction
         async function batchPredict() {
             updateStatus('loading', 'Generating batch predictions...');
@@ -1009,11 +1051,13 @@
             
             document.getElementById('zone-predictions').style.display = 'grid';
             
+            const simulationTime = data.model_info?.simulation_time || 'Unknown';
             document.getElementById('quick-result').innerHTML = `
                 <div class="result">
                     <strong>✅ Prediction Generated</strong><br>
-                    Total: ${(data.predictions[0] + data.predictions[1] + data.predictions[2]).toFixed(1)} kW<br>
-                    <small>Timestamp: ${new Date(data.timestamp).toLocaleTimeString()}</small>
+                    <strong>Forecast for:</strong> ${simulationTime}<br>
+                    <strong>Total Power:</strong> ${(data.predictions[0] + data.predictions[1] + data.predictions[2]).toFixed(1)} kW<br>
+                    <small>Generated: ${new Date(data.timestamp).toLocaleTimeString()}</small>
                 </div>
             `;
         }
