@@ -1089,18 +1089,51 @@
             predictionChart.update();
         }
         
-        // Input summary and visualization
+        // Input summary and visualization with proper units
         function updateInputSummary(summary) {
             if (!summary) return;
             
             const summaryDiv = document.getElementById('input-summary');
+            
+            // Feature units and formatting
+            const featureUnits = {
+                'Temperature': '°C',
+                'Humidity': '%',
+                'Wind Speed': 'm/s',
+                'general diffuse flows': 'W/m²',
+                'diffuse flows': 'W/m²',
+                'hour_sin': '',
+                'hour_cos': '',
+                'dow_sin': '',
+                'dow_cos': '',
+                'month_sin': '',
+                'month_cos': ''
+            };
+            
+            const featureFormatting = {
+                'Temperature': (val) => val.toFixed(1),
+                'Humidity': (val) => val.toFixed(0),
+                'Wind Speed': (val) => val.toFixed(1),
+                'general diffuse flows': (val) => val.toFixed(0),
+                'diffuse flows': (val) => val.toFixed(0),
+                'hour_sin': (val) => val.toFixed(3),
+                'hour_cos': (val) => val.toFixed(3),
+                'dow_sin': (val) => val.toFixed(3),
+                'dow_cos': (val) => val.toFixed(3),
+                'month_sin': (val) => val.toFixed(3),
+                'month_cos': (val) => val.toFixed(3)
+            };
+            
             summaryDiv.innerHTML = Object.keys(summary.feature_ranges).map(feature => {
                 const range = summary.feature_ranges[feature];
+                const unit = featureUnits[feature] || '';
+                const formatter = featureFormatting[feature] || ((val) => val.toFixed(2));
+                
                 return `
                     <div class="feature-stat">
-                        <div class="value">${range.mean.toFixed(2)}</div>
+                        <div class="value">${formatter(range.mean)}${unit}</div>
                         <div class="label">${feature}</div>
-                        <small>±${range.std.toFixed(2)}</small>
+                        <small>Range: ${formatter(range.min)}-${formatter(range.max)}${unit}</small>
                     </div>
                 `;
             }).join('');
@@ -1155,15 +1188,32 @@
                 // Display correlation heatmap
                 document.getElementById('correlation-heatmap').innerHTML = data.visualizations.correlation_heatmap;
                 
-                // Display feature statistics
+                // Display feature statistics with proper units
                 const statsDiv = document.getElementById('feature-stats');
+                const featureUnits = {
+                    'Temperature': '°C',
+                    'Humidity': '%',
+                    'Wind Speed': 'm/s',
+                    'general diffuse flows': 'W/m²',
+                    'diffuse flows': 'W/m²',
+                    'hour_sin': '',
+                    'hour_cos': '',
+                    'dow_sin': '',
+                    'dow_cos': '',
+                    'month_sin': '',
+                    'month_cos': ''
+                };
+                
                 statsDiv.innerHTML = Object.keys(data.feature_statistics).map(feature => {
                     const stats = data.feature_statistics[feature];
+                    const unit = featureUnits[feature] || '';
+                    const precision = feature.includes('sin') || feature.includes('cos') ? 3 : 1;
+                    
                     return `
                         <div class="feature-stat">
-                            <div class="value">${stats.mean.toFixed(2)}</div>
+                            <div class="value">${stats.mean.toFixed(precision)}${unit}</div>
                             <div class="label">${feature}</div>
-                            <small>Range: ${stats.min.toFixed(1)} - ${stats.max.toFixed(1)}</small>
+                            <small>Range: ${stats.min.toFixed(precision)} - ${stats.max.toFixed(precision)}${unit}</small>
                         </div>
                     `;
                 }).join('');

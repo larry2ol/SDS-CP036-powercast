@@ -711,7 +711,10 @@ async def predict(request: PredictionRequest):
                 detail=f"Invalid input shape. Expected ({expected_timesteps}, {expected_features}), got {features_array.shape}"
             )
         
-        # Normalize features if requested
+        # Store raw data for display purposes
+        raw_features_array = features_array.copy()
+        
+        # Normalize features if requested (for model inference)
         if request.normalize:
             # Reshape for scaler (samples x features)
             features_reshaped = features_array.reshape(-1, features_array.shape[-1])
@@ -739,8 +742,8 @@ async def predict(request: PredictionRequest):
             "Zone 3": float(prediction_denorm[2])
         }
         
-        # Create input summary
-        input_summary = create_input_summary(features_array)
+        # Create input summary using raw data
+        input_summary = create_input_summary(raw_features_array)
         
         return PredictionResponse(
             predictions=prediction_denorm.tolist(),
@@ -748,12 +751,12 @@ async def predict(request: PredictionRequest):
             model_info={
                 "model_type": "AttentionLSTM",
                 "confidence": "high",
-                "input_shape": list(features_array.shape),
+                "input_shape": list(raw_features_array.shape),
                 "normalized_input": request.normalize,
                 "simulation_time": simulation_state["current_datetime"].strftime("%Y-%m-%d %H:%M") if 'simulation_state' in globals() else None
             },
             timestamp=datetime.now().isoformat(),
-            input_data=features_array.tolist(),
+            input_data=raw_features_array.tolist(),  # Return raw data for display
             input_summary=input_summary
         )
         
@@ -858,30 +861,33 @@ async def analyze_features(request: PredictionRequest):
         features_array = np.array(request.features)
         feature_names = metadata["base_feature_cols"]
         
-        # Calculate statistics
-        correlation_matrix = np.corrcoef(features_array.T)
+        # Use raw data for analysis (more meaningful statistics)
+        raw_features = features_array.copy()
+        
+        # Calculate statistics on raw data
+        correlation_matrix = np.corrcoef(raw_features.T)
         feature_stats = {}
         
         for i, name in enumerate(feature_names):
             feature_stats[name] = {
-                "mean": float(features_array[:, i].mean()),
-                "std": float(features_array[:, i].std()),
-                "min": float(features_array[:, i].min()),
-                "max": float(features_array[:, i].max()),
-                "median": float(np.median(features_array[:, i]))
+                "mean": float(raw_features[:, i].mean()),
+                "std": float(raw_features[:, i].std()),
+                "min": float(raw_features[:, i].min()),
+                "max": float(raw_features[:, i].max()),
+                "median": float(np.median(raw_features[:, i]))
             }
         
-        # Create visualizations
+        # Create visualizations with raw data
         visualizations = {}
         
         # Correlation heatmap
-        visualizations["correlation_heatmap"] = create_correlation_heatmap(features_array, feature_names)
+        visualizations["correlation_heatmap"] = create_correlation_heatmap(raw_features, feature_names)
         
         # Feature importance (simplified)
         feature_importance = {}
         for i, name in enumerate(feature_names):
-            # Simple variance-based importance
-            feature_importance[name] = float(features_array[:, i].var())
+            # Simple variance-based importance on raw data
+            feature_importance[name] = float(raw_features[:, i].var())
         
         return FeatureAnalysis(
             correlation_matrix=correlation_matrix.tolist(),
@@ -901,12 +907,15 @@ async def visualize_input(request: PredictionRequest):
         features_array = np.array(request.features)
         feature_names = metadata["base_feature_cols"]
         
-        # Create visualizations
-        time_series_plot = create_time_series_plot(features_array, feature_names)
-        distribution_plot = create_feature_distribution_plot(features_array, feature_names)
+        # Always use raw data for visualization (don't normalize for display)
+        raw_features = features_array.copy()
+        
+        # Create visualizations with raw data
+        time_series_plot = create_time_series_plot(raw_features, feature_names)
+        distribution_plot = create_feature_distribution_plot(raw_features, feature_names)
         
         return InputVisualization(
-            input_data=features_array.tolist(),
+            input_data=raw_features.tolist(),
             feature_names=feature_names,
             time_series_plot=time_series_plot,
             feature_distribution_plot=distribution_plot
