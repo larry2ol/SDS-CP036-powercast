@@ -512,6 +512,10 @@ async def read_root():
             
             <div class="card full-width">
                 <h2>📊 Prediction History</h2>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                    <strong>Timestamps show simulated weather conditions</strong> (6-hour intervals) for realistic forecasting. 
+                    API call times are shown for debugging purposes.
+                </p>
                 <div id="prediction-history"></div>
                 <button class="button" onclick="clearHistory()">Clear History</button>
             </div>
@@ -706,14 +710,27 @@ async def read_root():
                     return;
                 }
                 
-                const historyHTML = predictionHistory.map(pred => `
-                    <div class="result" style="margin: 10px 0;">
-                        <strong>${pred.timestamp}</strong><br>
-                        Zone 1: ${pred.zone_predictions['Zone 1'].toFixed(2)} kW | 
-                        Zone 2: ${pred.zone_predictions['Zone 2'].toFixed(2)} kW | 
-                        Zone 3: ${pred.zone_predictions['Zone 3'].toFixed(2)} kW
-                    </div>
-                `).join('');
+                const historyHTML = predictionHistory.map(pred => {
+                    // Format timestamp for better readability
+                    const timestamp = new Date(pred.timestamp).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit', 
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                    
+                    return `
+                        <div class="result" style="margin: 10px 0;">
+                            <strong>📅 ${timestamp} (Tetouan Climate)</strong>
+                            ${pred.model_info?.api_call_time ? `<br><small style="color: #666;">API called at: ${pred.model_info.api_call_time}</small>` : ''}
+                            <br>Zone 1: ${pred.zone_predictions['Zone 1'].toFixed(2)} kW | 
+                            Zone 2: ${pred.zone_predictions['Zone 2'].toFixed(2)} kW | 
+                            Zone 3: ${pred.zone_predictions['Zone 3'].toFixed(2)} kW
+                        </div>
+                    `;
+                }).join('');
                 
                 historyDiv.innerHTML = historyHTML;
             }
@@ -824,6 +841,9 @@ async def predict(request: PredictionRequest):
         # Create input summary using raw data
         input_summary = create_input_summary(raw_features_array)
         
+        # Use simulation timestamp as primary timestamp for consistency
+        primary_timestamp = simulation_state["current_datetime"].isoformat() if 'simulation_state' in globals() else datetime.now().isoformat()
+        
         return PredictionResponse(
             predictions=prediction_denorm.tolist(),
             zone_predictions=zone_predictions,
@@ -832,9 +852,10 @@ async def predict(request: PredictionRequest):
                 "confidence": "high",
                 "input_shape": list(raw_features_array.shape),
                 "normalized_input": request.normalize,
-                "simulation_time": simulation_state["current_datetime"].strftime("%Y-%m-%d %H:%M") if 'simulation_state' in globals() else None
+                "simulation_time": simulation_state["current_datetime"].strftime("%Y-%m-%d %H:%M") if 'simulation_state' in globals() else None,
+                "api_call_time": datetime.now().strftime("%H:%M:%S")  # Show when API was called (for debugging)
             },
-            timestamp=datetime.now().isoformat(),
+            timestamp=primary_timestamp,  # Use simulation time as primary timestamp
             input_data=raw_features_array.tolist(),  # Return raw data for display
             input_summary=input_summary
         )
