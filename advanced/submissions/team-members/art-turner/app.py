@@ -18,6 +18,17 @@ import logging
 from datetime import datetime, timedelta
 import uvicorn
 from pathlib import Path
+import shap
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly
+import base64
+from io import BytesIO
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -78,6 +89,8 @@ class PredictionResponse(BaseModel):
     zone_predictions: Dict[str, float] = Field(..., description="Named zone predictions")
     model_info: Dict[str, Any] = Field(..., description="Model metadata")
     timestamp: str = Field(..., description="Prediction timestamp")
+    input_data: Optional[List[List[float]]] = Field(None, description="Input features used for prediction")
+    input_summary: Optional[Dict[str, Any]] = Field(None, description="Summary statistics of input data")
 
 class ModelInfo(BaseModel):
     """Model information response"""
@@ -95,6 +108,27 @@ class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
     timestamp: str
+
+class SHAPExplanation(BaseModel):
+    """SHAP explanation response"""
+    shap_values: List[List[float]] = Field(..., description="SHAP values for each feature and output")
+    feature_names: List[str] = Field(..., description="Names of input features")
+    base_values: List[float] = Field(..., description="Base values for each output")
+    explanation_plots: Dict[str, str] = Field(..., description="Base64 encoded explanation plots")
+
+class FeatureAnalysis(BaseModel):
+    """Feature analysis response"""
+    correlation_matrix: List[List[float]] = Field(..., description="Feature correlation matrix")
+    feature_importance: Dict[str, float] = Field(..., description="Global feature importance scores")
+    feature_statistics: Dict[str, Dict[str, float]] = Field(..., description="Statistical summary of features")
+    visualizations: Dict[str, str] = Field(..., description="Base64 encoded visualization plots")
+
+class InputVisualization(BaseModel):
+    """Input data visualization response"""
+    input_data: List[List[float]] = Field(..., description="The input time series data")
+    feature_names: List[str] = Field(..., description="Names of the features")
+    time_series_plot: str = Field(..., description="Base64 encoded time series plot")
+    feature_distribution_plot: str = Field(..., description="Base64 encoded feature distribution plot")
 
 def load_model_and_scalers():
     """Load the best performing model and preprocessing components"""
@@ -185,6 +219,124 @@ def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11) -> np.
     
     return np.array(features)
 
+def create_input_summary(features_array: np.ndarray) -> Dict[str, Any]:
+    """Create summary statistics for input features"""
+    return {
+        "shape": features_array.shape,
+        "mean_values": features_array.mean(axis=0).tolist(),
+        "std_values": features_array.std(axis=0).tolist(),
+        "min_values": features_array.min(axis=0).tolist(),
+        "max_values": features_array.max(axis=0).tolist(),
+        "feature_ranges": {
+            metadata["base_feature_cols"][i]: {
+                "min": float(features_array[:, i].min()),
+                "max": float(features_array[:, i].max()),
+                "mean": float(features_array[:, i].mean()),
+                "std": float(features_array[:, i].std())
+            } for i in range(features_array.shape[1])
+        }
+    }
+
+def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
+    """Create time series plot of input features"""
+    fig = make_subplots(
+        rows=3, cols=4,
+        subplot_titles=feature_names[:11],  # Show first 11 features
+        vertical_spacing=0.08,
+        horizontal_spacing=0.06
+    )
+    
+    colors = px.colors.qualitative.Set3
+    
+    for i, feature_name in enumerate(feature_names[:11]):
+        row = (i // 4) + 1
+        col = (i % 4) + 1
+        
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(len(features_array))),
+                y=features_array[:, i],
+                name=feature_name,
+                line=dict(color=colors[i % len(colors)], width=2),
+                showlegend=False
+            ),
+            row=row, col=col
+        )
+    
+    fig.update_layout(
+        height=600,
+        title_text="Input Features Time Series (36 timesteps)",
+        title_x=0.5
+    )
+    
+    return fig.to_html(include_plotlyjs='cdn')
+
+def create_feature_distribution_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
+    """Create feature distribution plots"""
+    fig = make_subplots(
+        rows=3, cols=4,
+        subplot_titles=feature_names[:11],
+        vertical_spacing=0.08,
+        horizontal_spacing=0.06
+    )
+    
+    for i, feature_name in enumerate(feature_names[:11]):
+        row = (i // 4) + 1
+        col = (i % 4) + 1
+        
+        fig.add_trace(
+            go.Histogram(
+                x=features_array[:, i],
+                name=feature_name,
+                nbinsx=10,
+                opacity=0.7,
+                showlegend=False
+            ),
+            row=row, col=col
+        )
+    
+    fig.update_layout(
+        height=600,
+        title_text="Input Features Distribution",
+        title_x=0.5
+    )
+    
+    return fig.to_html(include_plotlyjs='cdn')
+
+def create_correlation_heatmap(features_array: np.ndarray, feature_names: List[str]) -> str:
+    """Create correlation heatmap"""
+    correlation_matrix = np.corrcoef(features_array.T)
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=correlation_matrix,
+        x=feature_names[:11],
+        y=feature_names[:11],
+        colorscale='RdBu',
+        zmid=0,
+        text=np.round(correlation_matrix, 2),
+        texttemplate="%{text}",
+        textfont={"size": 10},
+        hoverongaps=False
+    ))
+    
+    fig.update_layout(
+        title="Feature Correlation Matrix",
+        height=500,
+        width=600
+    )
+    
+    return fig.to_html(include_plotlyjs='cdn')
+
+def plot_to_base64(fig) -> str:
+    """Convert matplotlib figure to base64 string"""
+    buffer = BytesIO()
+    fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.getvalue()).decode()
+    buffer.close()
+    plt.close(fig)
+    return f"data:image/png;base64,{image_base64}"
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize the application"""
@@ -194,6 +346,11 @@ async def startup_event():
 async def dashboard(request: Request):
     """Serve the advanced dashboard"""
     return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/advanced")
+async def advanced_dashboard(request: Request):
+    """Serve the advanced analytics dashboard with AI explainability"""
+    return templates.TemplateResponse("advanced_dashboard.html", {"request": request})
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
@@ -257,6 +414,11 @@ async def read_root():
         <div class="header">
             <h1>⚡ Powercast Forecasting API</h1>
             <p>Advanced Power Consumption Prediction using AttentionLSTM</p>
+            <div style="margin-top: 20px;">
+                <a href="/dashboard" class="button">📊 Standard Dashboard</a>
+                <a href="/advanced" class="button">🧠 AI Analytics Dashboard</a>
+                <a href="/docs" class="button">📖 API Documentation</a>
+            </div>
         </div>
         
         <div class="grid">
@@ -537,6 +699,9 @@ async def predict(request: PredictionRequest):
             "Zone 3": float(prediction_denorm[2])
         }
         
+        # Create input summary
+        input_summary = create_input_summary(features_array)
+        
         return PredictionResponse(
             predictions=prediction_denorm.tolist(),
             zone_predictions=zone_predictions,
@@ -546,7 +711,9 @@ async def predict(request: PredictionRequest):
                 "input_shape": list(features_array.shape),
                 "normalized_input": request.normalize
             },
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
+            input_data=features_array.tolist(),
+            input_summary=input_summary
         )
         
     except Exception as e:
@@ -587,6 +754,165 @@ async def generate_dummy_data():
         "feature_names": metadata["base_feature_cols"],
         "description": "Dummy time series data for testing the API"
     }
+
+@app.post("/explain", response_model=SHAPExplanation)
+async def explain_prediction(request: PredictionRequest):
+    """Generate SHAP explanations for a prediction"""
+    if model is None or feature_scaler is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    
+    try:
+        # Process input
+        features_array = np.array(request.features)
+        if request.normalize:
+            features_reshaped = features_array.reshape(-1, features_array.shape[-1])
+            features_normalized = feature_scaler.transform(features_reshaped)
+            features_array = features_normalized.reshape(features_array.shape)
+        
+        # Create SHAP explainer
+        input_tensor = torch.FloatTensor(features_array).unsqueeze(0)
+        
+        def model_predict(x):
+            with torch.no_grad():
+                x_tensor = torch.FloatTensor(x).reshape(-1, *features_array.shape)
+                predictions = model(x_tensor)
+                return predictions.cpu().numpy()
+        
+        # Generate background data for SHAP
+        background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]))
+        if request.normalize:
+            background_reshaped = background_data.reshape(-1, background_data.shape[-1])
+            background_normalized = feature_scaler.transform(background_reshaped)
+            background_data = background_normalized.reshape(background_data.shape)
+        
+        explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
+        shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
+        
+        # Create SHAP plots
+        explanation_plots = {}
+        
+        # Summary plot
+        plt.figure(figsize=(10, 6))
+        feature_names_flat = [f"{name}_{i}" for name in metadata["base_feature_cols"] for i in range(36)]
+        shap.summary_plot(shap_values, features_array.reshape(1, -1), 
+                         feature_names=feature_names_flat[:len(shap_values[0])], 
+                         show=False, max_display=20)
+        explanation_plots["summary"] = plot_to_base64(plt.gcf())
+        
+        return SHAPExplanation(
+            shap_values=shap_values,
+            feature_names=feature_names_flat[:len(shap_values[0])],
+            base_values=explainer.expected_value.tolist() if hasattr(explainer.expected_value, 'tolist') else [explainer.expected_value],
+            explanation_plots=explanation_plots
+        )
+        
+    except Exception as e:
+        logger.error(f"SHAP explanation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
+
+@app.post("/analyze-features", response_model=FeatureAnalysis)
+async def analyze_features(request: PredictionRequest):
+    """Analyze input features with correlations and statistics"""
+    try:
+        features_array = np.array(request.features)
+        feature_names = metadata["base_feature_cols"]
+        
+        # Calculate statistics
+        correlation_matrix = np.corrcoef(features_array.T)
+        feature_stats = {}
+        
+        for i, name in enumerate(feature_names):
+            feature_stats[name] = {
+                "mean": float(features_array[:, i].mean()),
+                "std": float(features_array[:, i].std()),
+                "min": float(features_array[:, i].min()),
+                "max": float(features_array[:, i].max()),
+                "median": float(np.median(features_array[:, i]))
+            }
+        
+        # Create visualizations
+        visualizations = {}
+        
+        # Correlation heatmap
+        visualizations["correlation_heatmap"] = create_correlation_heatmap(features_array, feature_names)
+        
+        # Feature importance (simplified)
+        feature_importance = {}
+        for i, name in enumerate(feature_names):
+            # Simple variance-based importance
+            feature_importance[name] = float(features_array[:, i].var())
+        
+        return FeatureAnalysis(
+            correlation_matrix=correlation_matrix.tolist(),
+            feature_importance=feature_importance,
+            feature_statistics=feature_stats,
+            visualizations=visualizations
+        )
+        
+    except Exception as e:
+        logger.error(f"Feature analysis error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@app.post("/visualize-input", response_model=InputVisualization)
+async def visualize_input(request: PredictionRequest):
+    """Create visualizations of input data"""
+    try:
+        features_array = np.array(request.features)
+        feature_names = metadata["base_feature_cols"]
+        
+        # Create visualizations
+        time_series_plot = create_time_series_plot(features_array, feature_names)
+        distribution_plot = create_feature_distribution_plot(features_array, feature_names)
+        
+        return InputVisualization(
+            input_data=features_array.tolist(),
+            feature_names=feature_names,
+            time_series_plot=time_series_plot,
+            feature_distribution_plot=distribution_plot
+        )
+        
+    except Exception as e:
+        logger.error(f"Input visualization error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Visualization failed: {str(e)}")
+
+@app.get("/feature-importance")
+async def get_global_feature_importance():
+    """Get global feature importance using multiple dummy samples"""
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    
+    try:
+        # Generate multiple dummy samples
+        importance_scores = {}
+        n_samples = 20
+        
+        for _ in range(n_samples):
+            dummy_features = create_dummy_time_series(
+                n_timesteps=metadata["lookback_window"],
+                n_features=len(metadata["base_feature_cols"])
+            )
+            
+            # Calculate feature variance as a proxy for importance
+            for i, feature_name in enumerate(metadata["base_feature_cols"]):
+                if feature_name not in importance_scores:
+                    importance_scores[feature_name] = []
+                importance_scores[feature_name].append(float(dummy_features[:, i].var()))
+        
+        # Average the importance scores
+        final_importance = {}
+        for feature_name in importance_scores:
+            final_importance[feature_name] = float(np.mean(importance_scores[feature_name]))
+        
+        return {
+            "feature_importance": final_importance,
+            "method": "variance-based",
+            "samples_used": n_samples,
+            "feature_names": metadata["base_feature_cols"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Feature importance error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Feature importance failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(

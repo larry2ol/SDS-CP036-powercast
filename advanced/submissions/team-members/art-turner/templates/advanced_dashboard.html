@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Powercast AI - Advanced Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 25px 40px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .icon {
+            font-size: 1.3em;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #36d1dc, #5b86e5);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+        
+        .zone-predictions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .zone-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .zone-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .zone-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .zone-label {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container.large {
+            height: 500px;
+        }
+        
+        .plotly-container {
+            height: 400px;
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .input-display {
+            background: linear-gradient(135deg, #f6f9fc, #e9ecef);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #e0e6ed;
+        }
+        
+        .feature-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-stat {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-stat .value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .feature-stat .label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .result {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            border-left: 5px solid #28a745;
+        }
+        
+        .error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border-left-color: #dc3545;
+        }
+        
+        .loading {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-healthy { background-color: #28a745; }
+        .status-loading { background-color: #ffc107; animation: pulse 1.5s infinite; }
+        .status-error { background-color: #dc3545; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .metric-label {
+            font-size: 1em;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .explanation-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .shap-plot {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-analysis-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-tab {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .input-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .real-time-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background-color: #667eea;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .zone-predictions {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .real-time-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Powercast AI Analytics</h1>
+            <p class="subtitle">Advanced Power Consumption Forecasting with AI Explainability</p>
+            <div class="status-bar">
+                <div class="control-group">
+                    <span class="status-indicator status-healthy" id="status-indicator"></span>
+                    <span id="status-text">System Ready</span>
+                </div>
+                <div class="control-group">
+                    <span>Real-time Mode:</span>
+                    <div class="toggle-switch" id="realtime-toggle" onclick="toggleRealTime()">
+                        <div class="toggle-slider"></div>
+                    </div>
+                    <span id="prediction-counter">0 predictions</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">📊 Overview</button>
+            <button class="tab" onclick="showTab('predictions')">🔮 Predictions</button>
+            <button class="tab" onclick="showTab('input-analysis')">📈 Input Analysis</button>
+            <button class="tab" onclick="showTab('explainability')">🧠 AI Explainability</button>
+            <button class="tab" onclick="showTab('feature-analysis')">🔬 Feature Analysis</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <h2><span class="icon">🤖</span>Model Performance</h2>
+                    <div id="model-info" class="loading">
+                        <div class="spinner"></div>
+                        Loading model information...
+                    </div>
+                    <div class="metrics-grid" id="metrics-grid" style="display: none;">
+                        <div class="metric-card">
+                            <div class="metric-value" id="r2-score">-</div>
+                            <div class="metric-label">R² Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="rmse-score">-</div>
+                            <div class="metric-label">RMSE (kW)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="mae-score">-</div>
+                            <div class="metric-label">MAE (kW)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="param-count">-</div>
+                            <div class="metric-label">Parameters</div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="loadModelInfo()">🔄 Refresh Info</button>
+                </div>
+                
+                <div class="card">
+                    <h2><span class="icon">⚡</span>Quick Predictions</h2>
+                    <div class="zone-predictions" id="zone-predictions" style="display: none;">
+                        <div class="zone-card">
+                            <div class="zone-label">Zone 1</div>
+                            <div class="zone-value" id="zone1-value">-</div>
+                            <div>kW</div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-label">Zone 2</div>
+                            <div class="zone-value" id="zone2-value">-</div>
+                            <div>kW</div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-label">Zone 3</div>
+                            <div class="zone-value" id="zone3-value">-</div>
+                            <div>kW</div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn" onclick="quickPredictWithAnalysis()">🚀 Smart Predict</button>
+                        <button class="btn btn-secondary" onclick="batchPredict()">📊 Batch (5x)</button>
+                    </div>
+                    <div id="quick-result"></div>
+                </div>
+            </div>
+            
+            <div class="card full-width">
+                <h2><span class="icon">📈</span>Real-time Prediction Streams</h2>
+                <div class="chart-container large">
+                    <canvas id="realtimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Predictions Tab -->
+        <div id="predictions" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2><span class="icon">🎯</span>Custom Prediction</h2>
+                    <textarea id="custom-features" placeholder="Enter JSON array of features (36x11)..." 
+                        style="width: 100%; height: 150px; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-family: monospace;"></textarea>
+                    <div style="margin: 15px 0;">
+                        <button class="btn" onclick="customPredictWithAnalysis()">🎯 Predict & Analyze</button>
+                        <button class="btn btn-secondary" onclick="loadSampleData()">📝 Load Sample</button>
+                        <button class="btn btn-secondary" onclick="validateInput()">✅ Validate</button>
+                    </div>
+                    <div id="custom-result"></div>
+                </div>
+                
+                <div class="card">
+                    <h2><span class="icon">📊</span>Prediction Insights</h2>
+                    <div class="chart-container">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card full-width">
+                <h2><span class="icon">📚</span>Prediction History</h2>
+                <div id="prediction-history" class="loading">
+                    No predictions yet. Generate predictions to see history.
+                </div>
+                <button class="btn btn-danger" onclick="clearHistory()">🗑️ Clear History</button>
+            </div>
+        </div>
+        
+        <!-- Input Analysis Tab -->
+        <div id="input-analysis" class="tab-content">
+            <div class="card full-width">
+                <h2><span class="icon">📈</span>Input Data Visualization</h2>
+                <div class="input-analysis-tabs">
+                    <div class="input-tab active" onclick="showInputTab('timeseries')">Time Series</div>
+                    <div class="input-tab" onclick="showInputTab('distribution')">Distribution</div>
+                    <div class="input-tab" onclick="showInputTab('correlation')">Correlation</div>
+                </div>
+                
+                <div id="input-timeseries" class="input-analysis-content active">
+                    <div id="timeseries-plot" class="plotly-container"></div>
+                </div>
+                
+                <div id="input-distribution" class="input-analysis-content">
+                    <div id="distribution-plot" class="plotly-container"></div>
+                </div>
+                
+                <div id="input-correlation" class="input-analysis-content">
+                    <div id="correlation-plot" class="plotly-container"></div>
+                </div>
+                
+                <div class="input-display">
+                    <h3>📋 Current Input Summary</h3>
+                    <div id="input-summary" class="feature-summary"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explainability Tab -->
+        <div id="explainability" class="tab-content">
+            <div class="card full-width">
+                <h2><span class="icon">🧠</span>SHAP Model Explainability</h2>
+                <p style="margin-bottom: 20px; color: #666;">
+                    Understand which features most influenced the model's predictions using SHAP (SHapley Additive exPlanations).
+                </p>
+                
+                <button class="btn" onclick="generateSHAPExplanation()">🔍 Generate SHAP Analysis</button>
+                <button class="btn btn-secondary" onclick="getFeatureImportance()">📊 Feature Importance</button>
+                
+                <div id="shap-loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    Generating SHAP explanations... This may take a moment.
+                </div>
+                
+                <div class="explanation-section" id="shap-results" style="display: none;">
+                    <h3>🎯 SHAP Analysis Results</h3>
+                    <div id="shap-plots"></div>
+                    <div id="shap-values-table"></div>
+                </div>
+                
+                <div class="explanation-section" id="importance-results" style="display: none;">
+                    <h3>📈 Global Feature Importance</h3>
+                    <div class="chart-container">
+                        <canvas id="importanceChart"></canvas>
+                    </div>
+                    <div id="importance-details"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature Analysis Tab -->
+        <div id="feature-analysis" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2><span class="icon">🔬</span>Statistical Analysis</h2>
+                    <button class="btn" onclick="analyzeCurrentFeatures()">🔍 Analyze Current Input</button>
+                    <div id="feature-stats" class="feature-summary"></div>
+                </div>
+                
+                <div class="card">
+                    <h2><span class="icon">🎨</span>Feature Correlations</h2>
+                    <div id="correlation-heatmap" class="plotly-container"></div>
+                </div>
+            </div>
+            
+            <div class="card full-width">
+                <h2><span class="icon">📊</span>Feature Behavior Analysis</h2>
+                <div class="chart-container large">
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentPrediction = null;
+        let predictionHistory = [];
+        let realTimeMode = false;
+        let realTimeInterval = null;
+        let realtimeChart = null;
+        let predictionChart = null;
+        let importanceChart = null;
+        let featureChart = null;
+        let currentInputData = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadModelInfo();
+            updateStatus('healthy', 'System Ready');
+        });
+        
+        // Tab management
+        function showTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Input analysis sub-tabs
+        function showInputTab(tabName) {
+            document.querySelectorAll('.input-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.input-analysis-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById('input-' + tabName).style.display = 'block';
+        }
+        
+        // Initialize charts
+        function initializeCharts() {
+            // Real-time chart
+            const ctx1 = document.getElementById('realtimeChart').getContext('2d');
+            realtimeChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Zone 1 (kW)',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Zone 2 (kW)',
+                        data: [],
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Zone 3 (kW)',
+                        data: [],
+                        borderColor: '#36d1dc',
+                        backgroundColor: 'rgba(54, 209, 220, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Real-time Power Consumption Predictions'
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Power (kW)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 750
+                    }
+                }
+            });
+            
+            // Prediction comparison chart
+            const ctx2 = document.getElementById('predictionChart').getContext('2d');
+            predictionChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Zone 1', 'Zone 2', 'Zone 3', 'Total'],
+                    datasets: [{
+                        label: 'Current Prediction',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(118, 75, 162, 0.8)',
+                            'rgba(54, 209, 220, 0.8)',
+                            'rgba(255, 206, 84, 0.8)'
+                        ],
+                        borderColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#36d1dc',
+                            '#ffce54'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Zone Power Consumption Breakdown'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Power (kW)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Feature importance chart
+            const ctx3 = document.getElementById('importanceChart').getContext('2d');
+            importanceChart = new Chart(ctx3, {
+                type: 'horizontalBar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Feature Importance',
+                        data: [],
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Global Feature Importance Scores'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Importance Score'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Status management
+        function updateStatus(status, message) {
+            const indicator = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            
+            indicator.className = `status-indicator status-${status}`;
+            text.textContent = message;
+        }
+        
+        function updatePredictionCounter(count) {
+            document.getElementById('prediction-counter').textContent = `${count} predictions`;
+        }
+        
+        // Model info loading
+        async function loadModelInfo() {
+            const infoDiv = document.getElementById('model-info');
+            const metricsGrid = document.getElementById('metrics-grid');
+            
+            updateStatus('loading', 'Loading model info...');
+            
+            try {
+                const response = await fetch('/model-info');
+                const data = await response.json();
+                
+                infoDiv.innerHTML = `
+                    <div><strong>Model:</strong> ${data.model_type}</div>
+                    <div><strong>Architecture:</strong> ${data.architecture}</div>
+                    <div style="margin-top: 15px; color: #666;">
+                        <strong>Input:</strong> ${data.input_features} features × 36 timesteps<br>
+                        <strong>Output:</strong> ${data.output_targets} zones
+                    </div>
+                `;
+                
+                // Update metrics
+                document.getElementById('r2-score').textContent = data.best_performance.r2.toFixed(4);
+                document.getElementById('rmse-score').textContent = data.best_performance.rmse.toFixed(1);
+                document.getElementById('mae-score').textContent = data.best_performance.mae.toFixed(1);
+                document.getElementById('param-count').textContent = (data.model_parameters / 1000).toFixed(0) + 'k';
+                
+                metricsGrid.style.display = 'grid';
+                updateStatus('healthy', 'Model loaded successfully');
+                
+            } catch (error) {
+                infoDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                updateStatus('error', 'Model load failed');
+            }
+        }
+        
+        // Enhanced prediction with analysis
+        async function quickPredictWithAnalysis() {
+            updateStatus('loading', 'Generating prediction with analysis...');
+            
+            try {
+                const response = await fetch('/predict-demo', { method: 'POST' });
+                const data = await response.json();
+                
+                currentPrediction = data;
+                currentInputData = data.input_data;
+                
+                updatePredictionDisplay(data);
+                updateCharts(data);
+                addToHistory(data);
+                
+                // Update input summary
+                updateInputSummary(data.input_summary);
+                
+                // Generate input visualizations
+                if (data.input_data) {
+                    await visualizeInput(data.input_data);
+                }
+                
+                updateStatus('healthy', 'Prediction with analysis complete');
+                
+            } catch (error) {
+                updateStatus('error', `Prediction failed: ${error.message}`);
+            }
+        }
+        
+        // Custom prediction with analysis
+        async function customPredictWithAnalysis() {
+            const featuresText = document.getElementById('custom-features').value;
+            if (!featuresText.trim()) {
+                alert('Please enter feature data');
+                return;
+            }
+            
+            try {
+                const features = JSON.parse(featuresText);
+                updateStatus('loading', 'Processing custom prediction...');
+                
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ features: features, normalize: true })
+                });
+                
+                const data = await response.json();
+                currentPrediction = data;
+                currentInputData = data.input_data;
+                
+                updatePredictionDisplay(data);
+                updateCharts(data);
+                addToHistory(data);
+                updateInputSummary(data.input_summary);
+                
+                // Generate input visualizations
+                await visualizeInput(data.input_data);
+                
+                document.getElementById('custom-result').innerHTML = `
+                    <div class="result">
+                        ✅ <strong>Custom Prediction Complete</strong><br>
+                        Input Shape: ${features.length} × ${features[0].length}<br>
+                        Total Power: ${(data.predictions[0] + data.predictions[1] + data.predictions[2]).toFixed(1)} kW
+                    </div>
+                `;
+                
+                updateStatus('healthy', 'Custom prediction complete');
+                
+            } catch (error) {
+                document.getElementById('custom-result').innerHTML = `
+                    <div class="result error">❌ Error: ${error.message}</div>
+                `;
+                updateStatus('error', 'Custom prediction failed');
+            }
+        }
+        
+        // Batch prediction
+        async function batchPredict() {
+            updateStatus('loading', 'Generating batch predictions...');
+            for (let i = 0; i < 5; i++) {
+                await quickPredictWithAnalysis();
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+            updateStatus('healthy', 'Batch predictions complete');
+        }
+        
+        // Update prediction display
+        function updatePredictionDisplay(data) {
+            document.getElementById('zone1-value').textContent = data.zone_predictions['Zone 1'].toFixed(1);
+            document.getElementById('zone2-value').textContent = data.zone_predictions['Zone 2'].toFixed(1);
+            document.getElementById('zone3-value').textContent = data.zone_predictions['Zone 3'].toFixed(1);
+            
+            document.getElementById('zone-predictions').style.display = 'grid';
+            
+            document.getElementById('quick-result').innerHTML = `
+                <div class="result">
+                    <strong>✅ Prediction Generated</strong><br>
+                    Total: ${(data.predictions[0] + data.predictions[1] + data.predictions[2]).toFixed(1)} kW<br>
+                    <small>Timestamp: ${new Date(data.timestamp).toLocaleTimeString()}</small>
+                </div>
+            `;
+        }
+        
+        // Update charts with new data
+        function updateCharts(data) {
+            const now = new Date().toLocaleTimeString();
+            
+            // Update real-time chart
+            if (realtimeChart.data.labels.length > 30) {
+                realtimeChart.data.labels.shift();
+                realtimeChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            realtimeChart.data.labels.push(now);
+            realtimeChart.data.datasets[0].data.push(data.zone_predictions['Zone 1']);
+            realtimeChart.data.datasets[1].data.push(data.zone_predictions['Zone 2']);
+            realtimeChart.data.datasets[2].data.push(data.zone_predictions['Zone 3']);
+            realtimeChart.update('none');
+            
+            // Update prediction chart
+            const total = data.predictions[0] + data.predictions[1] + data.predictions[2];
+            predictionChart.data.datasets[0].data = [
+                data.zone_predictions['Zone 1'],
+                data.zone_predictions['Zone 2'],
+                data.zone_predictions['Zone 3'],
+                total
+            ];
+            predictionChart.update();
+        }
+        
+        // Input summary and visualization
+        function updateInputSummary(summary) {
+            if (!summary) return;
+            
+            const summaryDiv = document.getElementById('input-summary');
+            summaryDiv.innerHTML = Object.keys(summary.feature_ranges).map(feature => {
+                const range = summary.feature_ranges[feature];
+                return `
+                    <div class="feature-stat">
+                        <div class="value">${range.mean.toFixed(2)}</div>
+                        <div class="label">${feature}</div>
+                        <small>±${range.std.toFixed(2)}</small>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Visualize input data
+        async function visualizeInput(inputData) {
+            try {
+                const response = await fetch('/visualize-input', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        features: inputData, 
+                        normalize: false 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Display time series plot
+                document.getElementById('timeseries-plot').innerHTML = data.time_series_plot;
+                
+                // Display distribution plot
+                document.getElementById('distribution-plot').innerHTML = data.feature_distribution_plot;
+                
+            } catch (error) {
+                console.error('Input visualization failed:', error);
+            }
+        }
+        
+        // Feature analysis
+        async function analyzeCurrentFeatures() {
+            if (!currentInputData) {
+                alert('No input data available. Generate a prediction first.');
+                return;
+            }
+            
+            try {
+                updateStatus('loading', 'Analyzing features...');
+                
+                const response = await fetch('/analyze-features', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        features: currentInputData,
+                        normalize: false 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Display correlation heatmap
+                document.getElementById('correlation-heatmap').innerHTML = data.visualizations.correlation_heatmap;
+                
+                // Display feature statistics
+                const statsDiv = document.getElementById('feature-stats');
+                statsDiv.innerHTML = Object.keys(data.feature_statistics).map(feature => {
+                    const stats = data.feature_statistics[feature];
+                    return `
+                        <div class="feature-stat">
+                            <div class="value">${stats.mean.toFixed(2)}</div>
+                            <div class="label">${feature}</div>
+                            <small>Range: ${stats.min.toFixed(1)} - ${stats.max.toFixed(1)}</small>
+                        </div>
+                    `;
+                }).join('');
+                
+                updateStatus('healthy', 'Feature analysis complete');
+                
+            } catch (error) {
+                updateStatus('error', `Feature analysis failed: ${error.message}`);
+            }
+        }
+        
+        // SHAP explanation
+        async function generateSHAPExplanation() {
+            if (!currentInputData) {
+                alert('No input data available. Generate a prediction first.');
+                return;
+            }
+            
+            const loadingDiv = document.getElementById('shap-loading');
+            const resultsDiv = document.getElementById('shap-results');
+            
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            updateStatus('loading', 'Generating SHAP explanations...');
+            
+            try {
+                const response = await fetch('/explain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        features: currentInputData,
+                        normalize: true 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Display SHAP plots
+                const plotsDiv = document.getElementById('shap-plots');
+                plotsDiv.innerHTML = `
+                    <h4>📊 SHAP Summary Plot</h4>
+                    <img src="${data.explanation_plots.summary}" class="shap-plot" alt="SHAP Summary Plot">
+                `;
+                
+                // Display SHAP values table
+                const tableDiv = document.getElementById('shap-values-table');
+                const topFeatures = data.shap_values[0]
+                    .map((value, index) => ({
+                        feature: data.feature_names[index],
+                        value: value,
+                        abs_value: Math.abs(value)
+                    }))
+                    .sort((a, b) => b.abs_value - a.abs_value)
+                    .slice(0, 10);
+                
+                tableDiv.innerHTML = `
+                    <h4>🎯 Top 10 Most Important Features</h4>
+                    <div class="feature-summary">
+                        ${topFeatures.map(item => `
+                            <div class="feature-stat">
+                                <div class="value" style="color: ${item.value >= 0 ? '#28a745' : '#dc3545'}">
+                                    ${item.value.toFixed(4)}
+                                </div>
+                                <div class="label">${item.feature.replace(/_\d+$/, '')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                loadingDiv.style.display = 'none';
+                resultsDiv.style.display = 'block';
+                updateStatus('healthy', 'SHAP explanation complete');
+                
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                alert(`SHAP explanation failed: ${error.message}`);
+                updateStatus('error', 'SHAP explanation failed');
+            }
+        }
+        
+        // Feature importance
+        async function getFeatureImportance() {
+            const resultsDiv = document.getElementById('importance-results');
+            updateStatus('loading', 'Calculating feature importance...');
+            
+            try {
+                const response = await fetch('/feature-importance');
+                const data = await response.json();
+                
+                // Update importance chart
+                const features = Object.keys(data.feature_importance);
+                const values = Object.values(data.feature_importance);
+                
+                importanceChart.data.labels = features;
+                importanceChart.data.datasets[0].data = values;
+                importanceChart.update();
+                
+                // Display details
+                document.getElementById('importance-details').innerHTML = `
+                    <div class="result">
+                        <strong>Method:</strong> ${data.method}<br>
+                        <strong>Samples Used:</strong> ${data.samples_used}<br>
+                        <strong>Most Important:</strong> ${features[values.indexOf(Math.max(...values))]}
+                    </div>
+                `;
+                
+                resultsDiv.style.display = 'block';
+                updateStatus('healthy', 'Feature importance analysis complete');
+                
+            } catch (error) {
+                alert(`Feature importance failed: ${error.message}`);
+                updateStatus('error', 'Feature importance failed');
+            }
+        }
+        
+        // Real-time mode
+        function toggleRealTime() {
+            const toggle = document.getElementById('realtime-toggle');
+            realTimeMode = !realTimeMode;
+            
+            if (realTimeMode) {
+                toggle.classList.add('active');
+                updateStatus('loading', 'Real-time mode active');
+                
+                let count = 0;
+                realTimeInterval = setInterval(async () => {
+                    count++;
+                    updatePredictionCounter(count);
+                    await quickPredictWithAnalysis();
+                }, 3000);
+                
+            } else {
+                toggle.classList.remove('active');
+                clearInterval(realTimeInterval);
+                updateStatus('healthy', 'Real-time mode stopped');
+            }
+        }
+        
+        // History management
+        function addToHistory(prediction) {
+            predictionHistory.unshift({
+                ...prediction,
+                id: Date.now()
+            });
+            
+            if (predictionHistory.length > 20) {
+                predictionHistory = predictionHistory.slice(0, 20);
+            }
+            
+            updateHistoryDisplay();
+        }
+        
+        function updateHistoryDisplay() {
+            const historyDiv = document.getElementById('prediction-history');
+            
+            if (predictionHistory.length === 0) {
+                historyDiv.innerHTML = '<div class="loading">No predictions yet.</div>';
+                return;
+            }
+            
+            const historyHTML = predictionHistory.slice(0, 10).map(pred => {
+                const total = pred.predictions[0] + pred.predictions[1] + pred.predictions[2];
+                return `
+                    <div class="input-display">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong>📅 ${new Date(pred.timestamp).toLocaleString()}</strong>
+                            <span style="color: #667eea; font-weight: bold;">Total: ${total.toFixed(1)} kW</span>
+                        </div>
+                        <div class="zone-predictions" style="grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div style="text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                                <div><strong>Zone 1</strong></div>
+                                <div style="font-size: 1.2em; color: #667eea;">${pred.zone_predictions['Zone 1'].toFixed(1)} kW</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: rgba(118, 75, 162, 0.1); border-radius: 8px;">
+                                <div><strong>Zone 2</strong></div>
+                                <div style="font-size: 1.2em; color: #764ba2;">${pred.zone_predictions['Zone 2'].toFixed(1)} kW</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: rgba(54, 209, 220, 0.1); border-radius: 8px;">
+                                <div><strong>Zone 3</strong></div>
+                                <div style="font-size: 1.2em; color: #36d1dc;">${pred.zone_predictions['Zone 3'].toFixed(1)} kW</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            historyDiv.innerHTML = historyHTML;
+        }
+        
+        function clearHistory() {
+            predictionHistory = [];
+            updateHistoryDisplay();
+            
+            // Clear charts
+            realtimeChart.data.labels = [];
+            realtimeChart.data.datasets.forEach(dataset => dataset.data = []);
+            realtimeChart.update();
+        }
+        
+        // Utility functions
+        function loadSampleData() {
+            fetch('/generate-dummy-data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('custom-features').value = JSON.stringify(data.features, null, 2);
+                })
+                .catch(error => console.error('Error loading sample data:', error));
+        }
+        
+        function validateInput() {
+            const featuresText = document.getElementById('custom-features').value;
+            const resultDiv = document.getElementById('custom-result');
+            
+            if (!featuresText.trim()) {
+                resultDiv.innerHTML = '<div class="result error">No input to validate</div>';
+                return;
+            }
+            
+            try {
+                const features = JSON.parse(featuresText);
+                const shape = [features.length, features[0].length];
+                
+                if (shape[0] === 36 && shape[1] === 11) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            ✅ Valid input shape: ${shape[0]} × ${shape[1]}<br>
+                            Ready for prediction!
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Invalid shape: ${shape[0]} × ${shape[1]}<br>
+                            Expected: 36 × 11
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Invalid JSON: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
