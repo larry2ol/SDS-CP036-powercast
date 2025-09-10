@@ -168,10 +168,10 @@ def load_model_and_scalers():
         logger.error(f"Error loading model components: {str(e)}")
         raise
 
-# Global simulation state
+# Global simulation state - Tetouan, Morocco climate
 simulation_state = {
     "current_datetime": datetime(2024, 1, 1, 0, 0),  # Start simulation
-    "base_temperature": 20.0,
+    "base_temperature": 20.0,  # Tetouan annual average (14-26°C range)
     "seasonal_factor": 0.0,
     "weather_trend": 0.0
 }
@@ -204,36 +204,50 @@ def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11, advanc
         hour_of_day = timestamp.hour
         day_of_year = timestamp.timetuple().tm_yday
         
-        # Daily temperature cycle (cooler at night, warmer during day)
-        daily_temp_cycle = 5 * np.sin(2 * np.pi * (hour_of_day - 6) / 24)
-        # Seasonal temperature variation
-        seasonal_temp = 15 * np.sin(2 * np.pi * (day_of_year - 80) / 365.25)
+        # Tetouan, Morocco climate simulation
+        # Daily temperature cycle (Mediterranean climate - moderate daily variation)
+        daily_temp_cycle = 4 * np.sin(2 * np.pi * (hour_of_day - 6) / 24)
+        
+        # Seasonal temperature variation: 14°C (Jan) to 26°C (Aug)
+        # Peak summer around day 213 (Aug 1), winter around day 15 (Jan 15)
+        seasonal_temp = 6 * np.sin(2 * np.pi * (day_of_year - 15) / 365.25)
+        
         # Base temperature with weather trend
         base_temp = simulation_state["base_temperature"] + simulation_state["weather_trend"]
         
-        temp = base_temp + seasonal_temp + daily_temp_cycle + np.random.normal(0, 1)
+        temp = base_temp + seasonal_temp + daily_temp_cycle + np.random.normal(0, 1.5)
+        temp = np.clip(temp, 8, 35)  # Reasonable bounds for Tetouan
         timestep_features.append(temp)
         
-        # Humidity (inversely related to temperature, with randomness)
-        humidity = 85 - (temp - 10) * 1.5 + np.random.normal(0, 5)
-        humidity = np.clip(humidity, 30, 95)
+        # Mediterranean humidity: 70-78% year-round, slightly lower in hot summer
+        base_humidity = 74  # Average
+        # Slightly lower humidity in summer (high temps), higher in winter
+        seasonal_humidity_adj = -2 * np.sin(2 * np.pi * (day_of_year - 15) / 365.25)
+        humidity = base_humidity + seasonal_humidity_adj + np.random.normal(0, 4)
+        humidity = np.clip(humidity, 65, 82)  # 70-78% ± variation
         timestep_features.append(humidity)
         
-        # Wind Speed (with some persistence and randomness)
-        base_wind = 3 + 2 * np.sin(2 * np.pi * day_of_year / 365.25)  # Seasonal wind
-        wind_speed = base_wind + np.random.exponential(2)
-        wind_speed = np.clip(wind_speed, 0, 20)
+        # Mediterranean wind patterns (coastal location)
+        base_wind = 4 + 1.5 * np.sin(2 * np.pi * day_of_year / 365.25)  # Slightly windier in winter
+        wind_speed = base_wind + np.random.exponential(1.5)
+        wind_speed = np.clip(wind_speed, 1, 18)  # Mediterranean coastal winds
         timestep_features.append(wind_speed)
         
-        # Solar irradiance (realistic day/night cycle)
-        if 6 <= hour_of_day <= 18:  # Daytime
-            solar_angle = np.sin(np.pi * (hour_of_day - 6) / 12)
-            base_solar = 800 * solar_angle
-            # Seasonal variation (stronger in summer)
-            seasonal_solar_mult = 0.7 + 0.6 * np.sin(2 * np.pi * (day_of_year - 80) / 365.25)
-            general_diffuse = base_solar * seasonal_solar_mult + np.random.normal(0, 50)
+        # Solar irradiance (Mediterranean - very sunny summers, cloudier winters)
+        if 5 <= hour_of_day <= 19:  # Longer days in Mediterranean
+            solar_angle = np.sin(np.pi * (hour_of_day - 5) / 14)
+            base_solar = 900 * solar_angle  # High solar potential
+            
+            # Seasonal variation: very sunny summers (July=dry), cloudier winters (Dec=rainy)
+            # Peak sun in summer (day 200), lowest in winter (day 350)
+            seasonal_solar_mult = 0.6 + 0.5 * np.sin(2 * np.pi * (day_of_year - 350) / 365.25)
+            
+            # Random weather (clouds, clear days)
+            weather_factor = 0.7 + 0.3 * np.random.random()  # 70-100% of potential
+            
+            general_diffuse = base_solar * seasonal_solar_mult * weather_factor + np.random.normal(0, 30)
         else:  # Nighttime
-            general_diffuse = np.random.normal(0, 10)
+            general_diffuse = np.random.normal(0, 5)
         
         general_diffuse = np.clip(general_diffuse, 0, 1000)
         timestep_features.append(general_diffuse)
@@ -474,6 +488,15 @@ async def read_root():
                 <button class="button" onclick="quickPredict()">🚀 Quick Predict</button>
                 <button class="button" onclick="demoRealTime()">📊 Real-time Demo</button>
                 <div id="quick-result"></div>
+                
+                <!-- Input Summary Display -->
+                <div id="input-display" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px solid #e9ecef;">
+                    <h3 style="margin-bottom: 15px; color: #333;">📊 Input Data Summary</h3>
+                    <div id="input-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;"></div>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                        <strong>Forecast based on:</strong> <span id="simulation-time-display">Current conditions</span>
+                    </p>
+                </div>
             </div>
             
             <div class="card full-width">
@@ -533,10 +556,14 @@ async def read_root():
                             <p><strong>Zone 1:</strong> ${data.zone_predictions['Zone 1'].toFixed(2)} kW</p>
                             <p><strong>Zone 2:</strong> ${data.zone_predictions['Zone 2'].toFixed(2)} kW</p>
                             <p><strong>Zone 3:</strong> ${data.zone_predictions['Zone 3'].toFixed(2)} kW</p>
+                            <p><strong>Total Power:</strong> ${(data.predictions[0] + data.predictions[1] + data.predictions[2]).toFixed(1)} kW</p>
                             <p><strong>Timestamp:</strong> ${data.timestamp}</p>
                         </div>
                     `;
                     resultDiv.innerHTML = result;
+                    
+                    // Display input summary that generated this prediction
+                    displayInputSummary(data.input_summary, data.model_info?.simulation_time);
                     
                     // Add to history
                     addToHistory(data);
@@ -544,6 +571,58 @@ async def read_root():
                 } catch (error) {
                     resultDiv.innerHTML = `<div class="result error">Error: ${error.message}</div>`;
                 }
+            }
+            
+            function displayInputSummary(inputSummary, simulationTime) {
+                if (!inputSummary || !inputSummary.feature_ranges) return;
+                
+                const inputDisplay = document.getElementById('input-display');
+                const summaryGrid = document.getElementById('input-summary-grid');
+                const timeDisplay = document.getElementById('simulation-time-display');
+                
+                // Feature units for display
+                const featureUnits = {
+                    'Temperature': '°C',
+                    'Humidity': '%',
+                    'Wind Speed': 'm/s',
+                    'general diffuse flows': 'W/m²',
+                    'diffuse flows': 'W/m²'
+                };
+                
+                // Show only the main environmental features (not cyclical ones)
+                const mainFeatures = ['Temperature', 'Humidity', 'Wind Speed', 'general diffuse flows', 'diffuse flows'];
+                
+                summaryGrid.innerHTML = mainFeatures.map(feature => {
+                    const range = inputSummary.feature_ranges[feature];
+                    if (!range) return '';
+                    
+                    const unit = featureUnits[feature] || '';
+                    const precision = feature.includes('flows') ? 0 : 1;
+                    
+                    return `
+                        <div style="text-align: center; padding: 10px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                            <div style="font-size: 1.2em; font-weight: bold; color: #667eea;">
+                                ${range.mean.toFixed(precision)}${unit}
+                            </div>
+                            <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                                ${feature}
+                            </div>
+                            <div style="font-size: 0.75em; color: #999; margin-top: 2px;">
+                                ${range.min.toFixed(precision)}-${range.max.toFixed(precision)}${unit}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Update simulation time
+                if (simulationTime) {
+                    timeDisplay.textContent = simulationTime + ' (Tetouan, Morocco climate)';
+                } else {
+                    timeDisplay.textContent = 'Current conditions (Tetouan, Morocco climate)';
+                }
+                
+                // Show the input display
+                inputDisplay.style.display = 'block';
             }
             
             function loadDummyData() {
@@ -983,7 +1062,7 @@ async def reset_simulation():
     global simulation_state
     simulation_state = {
         "current_datetime": datetime(2024, 1, 1, 0, 0),
-        "base_temperature": 20.0,
+        "base_temperature": 20.0,  # Tetouan annual average (14-26°C range)
         "seasonal_factor": 0.0,
         "weather_trend": 0.0
     }
