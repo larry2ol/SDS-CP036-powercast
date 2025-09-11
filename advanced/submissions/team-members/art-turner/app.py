@@ -298,93 +298,113 @@ def create_input_summary(features_array: np.ndarray) -> Dict[str, Any]:
 
 def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create time series plot of input features"""
-    fig = make_subplots(
-        rows=3, cols=4,
-        subplot_titles=feature_names[:11],  # Show first 11 features
-        vertical_spacing=0.08,
-        horizontal_spacing=0.06
-    )
-    
-    colors = px.colors.qualitative.Set3
-    
-    for i, feature_name in enumerate(feature_names[:11]):
-        row = (i // 4) + 1
-        col = (i % 4) + 1
+    try:
+        # Limit to first 11 features to fit 3x4 grid
+        n_features = min(len(feature_names), 11, features_array.shape[1])
         
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(len(features_array))),
-                y=features_array[:, i],
-                name=feature_name,
-                line=dict(color=colors[i % len(colors)], width=2),
-                showlegend=False
-            ),
-            row=row, col=col
+        fig = make_subplots(
+            rows=3, cols=4,
+            subplot_titles=feature_names[:n_features],
+            vertical_spacing=0.08,
+            horizontal_spacing=0.06
         )
-    
-    fig.update_layout(
-        height=600,
-        title_text="Input Features Time Series (36 timesteps)",
-        title_x=0.5
-    )
-    
-    return fig.to_html(include_plotlyjs='cdn')
+        
+        colors = px.colors.qualitative.Set3
+        
+        for i in range(n_features):
+            row = (i // 4) + 1
+            col = (i % 4) + 1
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(len(features_array))),
+                    y=features_array[:, i],
+                    name=feature_names[i],
+                    line=dict(color=colors[i % len(colors)], width=2),
+                    showlegend=False
+                ),
+                row=row, col=col
+            )
+        
+        fig.update_layout(
+            height=600,
+            title_text="Input Features Time Series (36 timesteps)",
+            title_x=0.5
+        )
+        
+        return fig.to_html(include_plotlyjs='cdn')
+        
+    except Exception as e:
+        logger.error(f"Time series plot creation failed: {str(e)}")
+        return f"<div style='text-align: center; padding: 50px; color: red;'>Error creating time series plot: {str(e)}</div>"
 
 def create_feature_distribution_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create feature distribution plots"""
-    fig = make_subplots(
-        rows=3, cols=4,
-        subplot_titles=feature_names[:11],
-        vertical_spacing=0.08,
-        horizontal_spacing=0.06
-    )
-    
-    for i, feature_name in enumerate(feature_names[:11]):
-        row = (i // 4) + 1
-        col = (i % 4) + 1
-        
-        fig.add_trace(
-            go.Histogram(
-                x=features_array[:, i],
-                name=feature_name,
-                nbinsx=10,
-                opacity=0.7,
-                showlegend=False
-            ),
-            row=row, col=col
+    try:
+        n_features = min(len(feature_names), 11, features_array.shape[1])
+        fig = make_subplots(
+            rows=3, cols=4,
+            subplot_titles=feature_names[:n_features],
+            vertical_spacing=0.08,
+            horizontal_spacing=0.06
         )
-    
-    fig.update_layout(
-        height=600,
-        title_text="Input Features Distribution",
-        title_x=0.5
-    )
-    
-    return fig.to_html(include_plotlyjs='cdn')
+        
+        for i in range(n_features):
+            row = (i // 4) + 1
+            col = (i % 4) + 1
+            
+            fig.add_trace(
+                go.Histogram(
+                    x=features_array[:, i],
+                    name=feature_names[i],
+                    nbinsx=10,
+                    opacity=0.7,
+                    showlegend=False
+                ),
+                row=row, col=col
+            )
+        
+        fig.update_layout(
+            height=600,
+            title_text="Input Features Distribution",
+            title_x=0.5
+        )
+        
+        return fig.to_html(include_plotlyjs='cdn')
+        
+    except Exception as e:
+        logger.error(f"Distribution plot creation failed: {str(e)}")
+        return f"<div style='text-align: center; padding: 50px; color: red;'>Error creating distribution plot: {str(e)}</div>"
 
 def create_correlation_heatmap(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create correlation heatmap"""
-    correlation_matrix = np.corrcoef(features_array.T)
-    
-    fig = go.Figure(data=go.Heatmap(
-        z=correlation_matrix,
-        x=feature_names[:11],
-        y=feature_names[:11],
-        colorscale='RdBu',
-        zmid=0,
-        text=np.round(correlation_matrix, 2),
-        texttemplate="%{text}",
-        textfont={"size": 10},
-        hoverongaps=False
-    ))
-    
-    fig.update_layout(
-        title="Feature Correlation Matrix",
-        height=500,
-        width=600
-    )
-    
-    return fig.to_html(include_plotlyjs='cdn')
+    try:
+        n_features = min(len(feature_names), 11, features_array.shape[1])
+        correlation_matrix = np.corrcoef(features_array[:, :n_features].T)
+        
+        fig = go.Figure(data=go.Heatmap(
+            z=correlation_matrix,
+            x=feature_names[:n_features],
+            y=feature_names[:n_features],
+            colorscale='RdBu',
+            zmid=0,
+            text=np.round(correlation_matrix, 2),
+            texttemplate="%{text}",
+            textfont={"size": 10},
+            hoverongaps=False
+        ))
+        
+        fig.update_layout(
+            title="Feature Correlation Matrix",
+            height=500,
+            width=600
+        )
+        
+        return fig.to_html(include_plotlyjs='cdn')
+        
+    except Exception as e:
+        logger.error(f"Correlation heatmap creation failed: {str(e)}")
+        return f"<div style='text-align: center; padding: 50px; color: red;'>Error creating correlation heatmap: {str(e)}</div>"
 
 def plot_to_base64(fig) -> str:
     """Convert matplotlib figure to base64 string"""
@@ -965,13 +985,17 @@ async def explain_prediction(request: PredictionRequest):
         # Create SHAP plots
         explanation_plots = {}
         
-        # Summary plot
-        plt.figure(figsize=(10, 6))
-        feature_names_flat = [f"{name}_{i}" for name in metadata["base_feature_cols"] for i in range(36)]
-        shap.summary_plot(shap_values, features_array.reshape(1, -1), 
-                         feature_names=feature_names_flat[:len(shap_values[0])], 
-                         show=False, max_display=20)
-        explanation_plots["summary"] = plot_to_base64(plt.gcf())
+        # Summary plot with better error handling
+        try:
+            plt.figure(figsize=(10, 6))
+            feature_names_flat = [f"{name}_{i}" for name in metadata["base_feature_cols"] for i in range(36)][:len(shap_values[0])]
+            shap.summary_plot(shap_values, features_array.reshape(1, -1), 
+                             feature_names=feature_names_flat, 
+                             show=False, max_display=20)
+            explanation_plots["summary"] = plot_to_base64(plt.gcf())
+        except Exception as plot_error:
+            logger.error(f"SHAP plot creation failed: {str(plot_error)}")
+            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="  # 1x1 transparent pixel
         
         return SHAPExplanation(
             shap_values=shap_values,
@@ -1047,12 +1071,30 @@ async def visualize_input(request: PredictionRequest):
         features_array = np.array(request.features)
         feature_names = metadata["base_feature_cols"]
         
-        # Always use raw data for visualization (don't normalize for display)
+        # Debug logging
+        logger.info(f"Input visualization - Features shape: {features_array.shape}")
+        logger.info(f"Feature names count: {len(feature_names)}")
+        
+        # Validate input dimensions
+        if len(features_array.shape) != 2:
+            raise ValueError(f"Expected 2D array, got shape {features_array.shape}")
+        
+        if features_array.shape[1] != len(feature_names):
+            logger.warning(f"Feature count mismatch: data has {features_array.shape[1]} features, metadata has {len(feature_names)}")
+            # Adjust feature names to match data
+            feature_names = feature_names[:features_array.shape[1]]
+        
+        # Always use raw data for visualization (don't normalize for display)  
         raw_features = features_array.copy()
         
         # Create visualizations with raw data
+        logger.info("Creating time series plot...")
         time_series_plot = create_time_series_plot(raw_features, feature_names)
+        
+        logger.info("Creating distribution plot...")
         distribution_plot = create_feature_distribution_plot(raw_features, feature_names)
+        
+        logger.info("Creating correlation plot...")
         correlation_plot = create_correlation_heatmap(raw_features, feature_names)
         
         return InputVisualization(
