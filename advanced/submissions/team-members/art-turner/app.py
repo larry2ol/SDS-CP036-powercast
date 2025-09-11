@@ -112,9 +112,9 @@ class HealthResponse(BaseModel):
 
 class SHAPExplanation(BaseModel):
     """SHAP explanation response"""
-    shap_values: List[List[float]] = Field(..., description="SHAP values for each feature and output")
-    feature_names: List[str] = Field(..., description="Names of input features")
-    base_values: List[float] = Field(..., description="Base values for each output")
+    shap_values: List[float] = Field(..., description="Flattened SHAP values for the first output")
+    feature_names: List[str] = Field(..., description="Names of input features (flattened per timestep)")
+    base_values: List[float] = Field(..., description="Base values (first output if multi-output)")
     explanation_plots: Dict[str, str] = Field(..., description="Base64 encoded explanation plots")
 
 class FeatureAnalysis(BaseModel):
@@ -980,42 +980,61 @@ async def explain_prediction(request: PredictionRequest):
         
         # Create SHAP explainer
         input_tensor = torch.FloatTensor(features_array).unsqueeze(0)
-        
+
         def model_predict(x):
             with torch.no_grad():
+                # x comes in as (n_samples, 36*11)
                 x_tensor = torch.FloatTensor(x).reshape(-1, *features_array.shape)
                 predictions = model(x_tensor)
                 return predictions.cpu().numpy()
-        
+
         # Generate background data for SHAP
         background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
         if request.normalize:
             background_reshaped = background_data.reshape(-1, background_data.shape[-1])
             background_normalized = feature_scaler.transform(background_reshaped)
             background_data = background_normalized.reshape(background_data.shape)
-        
+
         explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
-        shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
-        
-        # Create SHAP plots
+        raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
+
+        # Normalize shap output to a (1, F) array for the first output
+        if isinstance(raw_shap_values, list):
+            shap_arr = np.array(raw_shap_values[0])  # first output
+        else:
+            shap_arr = np.array(raw_shap_values)
+        if shap_arr.ndim == 1:
+            shap_arr = shap_arr.reshape(1, -1)
+
+        # Prepare feature names for flattened input (length 36*features)
+        num_timesteps, num_feats = features_array.shape
+        feature_names_flat = [f"{name}_{i}" for i in range(num_timesteps) for name in metadata["base_feature_cols"]][: shap_arr.shape[1]]
+
+        # Create SHAP plots (best-effort)
         explanation_plots = {}
-        
-        # Summary plot with better error handling
         try:
             plt.figure(figsize=(10, 6))
-            feature_names_flat = [f"{name}_{i}" for name in metadata["base_feature_cols"] for i in range(36)][:len(shap_values[0])]
-            shap.summary_plot(shap_values, features_array.reshape(1, -1), 
-                             feature_names=feature_names_flat, 
-                             show=False, max_display=20)
+            shap.summary_plot(shap_arr, features_array.reshape(1, -1),
+                              feature_names=feature_names_flat, show=False, max_display=20)
             explanation_plots["summary"] = plot_to_base64(plt.gcf())
         except Exception as plot_error:
             logger.error(f"SHAP plot creation failed: {str(plot_error)}")
-            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="  # 1x1 transparent pixel
-        
+            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+
+        # Convert values to simple 1D list for the client
+        shap_values_list = shap_arr.flatten().tolist()
+
+        # Base values handling (first output if multi-output)
+        exp_val = explainer.expected_value
+        if isinstance(exp_val, (list, tuple, np.ndarray)):
+            base_vals = list(np.array(exp_val).flatten()[:1])
+        else:
+            base_vals = [float(exp_val)]
+
         return SHAPExplanation(
-            shap_values=shap_values,
-            feature_names=feature_names_flat[:len(shap_values[0])],
-            base_values=explainer.expected_value.tolist() if hasattr(explainer.expected_value, 'tolist') else [explainer.expected_value],
+            shap_values=shap_values_list,
+            feature_names=feature_names_flat,
+            base_values=base_vals,
             explanation_plots=explanation_plots
         )
         
