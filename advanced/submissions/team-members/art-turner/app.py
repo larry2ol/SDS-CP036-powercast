@@ -15,6 +15,7 @@ import torch
 import pickle
 import json
 import logging
+import threading
 from datetime import datetime, timedelta
 import uvicorn
 from pathlib import Path
@@ -175,6 +176,9 @@ simulation_state = {
     "seasonal_factor": 0.0,
     "weather_trend": 0.0
 }
+
+# Thread lock for simulation state to prevent race conditions
+simulation_lock = threading.Lock()
 
 def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11, advance_time: bool = True) -> np.ndarray:
     """Create realistic time-progressing dummy time series data for simulation"""
@@ -514,7 +518,7 @@ async def read_root():
                 <h2>📊 Prediction History</h2>
                 <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
                     <strong>Timestamps show simulated weather conditions</strong> (6-hour intervals) for realistic forecasting. 
-                    API call times are shown for debugging purposes.
+                    API call times are shown for diagnostic and performance monitoring.
                 </p>
                 <div id="prediction-history"></div>
                 <button class="button" onclick="clearHistory()">Clear History</button>
@@ -870,10 +874,22 @@ async def predict_demo():
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
-    # Generate dummy time series data
+    # Advance simulation time BEFORE generating data to ensure consistency
+    global simulation_state
+    with simulation_lock:
+        simulation_state["current_datetime"] += timedelta(hours=6)
+        
+        # Update seasonal and weather trends
+        day_of_year = simulation_state["current_datetime"].timetuple().tm_yday
+        simulation_state["seasonal_factor"] = 10 * np.sin(2 * np.pi * day_of_year / 365.25)
+        simulation_state["weather_trend"] += np.random.normal(0, 0.5)
+        simulation_state["weather_trend"] = np.clip(simulation_state["weather_trend"], -5, 5)
+    
+    # Generate dummy time series data WITHOUT advancing time again
     dummy_features = create_dummy_time_series(
         n_timesteps=metadata["lookback_window"], 
-        n_features=len(metadata["base_feature_cols"])
+        n_features=len(metadata["base_feature_cols"]),
+        advance_time=False  # Don't advance time again - we already did it
     )
     
     # Create prediction request
@@ -889,7 +905,8 @@ async def generate_dummy_data():
     """Generate dummy time series data for testing"""
     dummy_features = create_dummy_time_series(
         n_timesteps=metadata["lookback_window"], 
-        n_features=len(metadata["base_feature_cols"])
+        n_features=len(metadata["base_feature_cols"]),
+        advance_time=False  # Don't advance time for testing/debugging
     )
     
     return {
@@ -923,7 +940,7 @@ async def explain_prediction(request: PredictionRequest):
                 return predictions.cpu().numpy()
         
         # Generate background data for SHAP
-        background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]))
+        background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
         if request.normalize:
             background_reshaped = background_data.reshape(-1, background_data.shape[-1])
             background_normalized = feature_scaler.transform(background_reshaped)
@@ -1039,7 +1056,8 @@ async def get_global_feature_importance():
         for _ in range(n_samples):
             dummy_features = create_dummy_time_series(
                 n_timesteps=metadata["lookback_window"],
-                n_features=len(metadata["base_feature_cols"])
+                n_features=len(metadata["base_feature_cols"]),
+                advance_time=False  # Don't advance simulation time for analysis samples
             )
             
             # Calculate feature variance as a proxy for importance
