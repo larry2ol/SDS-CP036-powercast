@@ -729,7 +729,7 @@
         
         // Initialize charts
         function initializeCharts() {
-            // Real-time chart
+            // Real-time chart (X-axis shows weather simulation timestamps, not API call times)
             const ctx1 = document.getElementById('realtimeChart').getContext('2d');
             realtimeChart = new Chart(ctx1, {
                 type: 'line',
@@ -1064,7 +1064,14 @@
         
         // Update charts with new data
         function updateCharts(data) {
-            const now = new Date().toLocaleTimeString();
+            // Format simulation timestamp for weather conditions (not API call time)
+            const weatherTimestamp = new Date(data.timestamp).toLocaleString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
             
             // Update real-time chart
             if (realtimeChart.data.labels.length > 30) {
@@ -1072,7 +1079,7 @@
                 realtimeChart.data.datasets.forEach(dataset => dataset.data.shift());
             }
             
-            realtimeChart.data.labels.push(now);
+            realtimeChart.data.labels.push(weatherTimestamp);
             realtimeChart.data.datasets[0].data.push(data.zone_predictions['Zone 1']);
             realtimeChart.data.datasets[1].data.push(data.zone_predictions['Zone 2']);
             realtimeChart.data.datasets[2].data.push(data.zone_predictions['Zone 3']);
