@@ -189,28 +189,28 @@
         .zone-predictions {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin: 25px 0;
+            gap: 15px;
+            margin: 20px 0;
         }
         
         .zone-card {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 25px;
-            border-radius: 20px;
+            padding: 20px;
+            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
             transition: transform 0.3s ease;
         }
         
         .zone-card:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
         
         .zone-value {
-            font-size: 2.5em;
+            font-size: 2em;
             font-weight: bold;
-            margin: 15px 0;
+            margin: 10px 0;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         
@@ -605,15 +605,30 @@
                 </div>
                 
                 <div id="input-timeseries" class="input-analysis-content active">
-                    <div id="timeseries-plot" class="plotly-container"></div>
+                    <div id="timeseries-plot" class="plotly-container">
+                        <div style="text-align: center; padding: 50px; color: #666;">
+                            <p>📊 Generate a prediction to view time series visualization</p>
+                            <p>Use "Smart Predict" or "Custom Prediction" to populate charts</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div id="input-distribution" class="input-analysis-content">
-                    <div id="distribution-plot" class="plotly-container"></div>
+                    <div id="distribution-plot" class="plotly-container">
+                        <div style="text-align: center; padding: 50px; color: #666;">
+                            <p>📈 Generate a prediction to view feature distribution</p>
+                            <p>Use "Smart Predict" or "Custom Prediction" to populate charts</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div id="input-correlation" class="input-analysis-content">
-                    <div id="correlation-plot" class="plotly-container"></div>
+                    <div id="correlation-plot" class="plotly-container">
+                        <div style="text-align: center; padding: 50px; color: #666;">
+                            <p>🔗 Generate a prediction to view correlation matrix</p>
+                            <p>Use "Smart Predict" or "Custom Prediction" to populate charts</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="input-display">
@@ -1166,8 +1181,21 @@
                 // Display distribution plot
                 document.getElementById('distribution-plot').innerHTML = data.feature_distribution_plot;
                 
+                // Display correlation plot
+                document.getElementById('correlation-plot').innerHTML = data.correlation_plot;
+                
             } catch (error) {
                 console.error('Input visualization failed:', error);
+                
+                // Show error message in plot containers
+                const errorMsg = `<div style="text-align: center; padding: 50px; color: #666;">
+                    <p>⚠️ Visualization failed: ${error.message}</p>
+                    <p>Please try generating a prediction first.</p>
+                </div>`;
+                
+                document.getElementById('timeseries-plot').innerHTML = errorMsg;
+                document.getElementById('distribution-plot').innerHTML = errorMsg;
+                document.getElementById('correlation-plot').innerHTML = errorMsg;
             }
         }
         

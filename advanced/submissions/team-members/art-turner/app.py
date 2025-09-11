@@ -128,8 +128,9 @@ class InputVisualization(BaseModel):
     """Input data visualization response"""
     input_data: List[List[float]] = Field(..., description="The input time series data")
     feature_names: List[str] = Field(..., description="Names of the features")
-    time_series_plot: str = Field(..., description="Base64 encoded time series plot")
-    feature_distribution_plot: str = Field(..., description="Base64 encoded feature distribution plot")
+    time_series_plot: str = Field(..., description="HTML time series plot")
+    feature_distribution_plot: str = Field(..., description="HTML feature distribution plot")
+    correlation_plot: str = Field(..., description="HTML correlation heatmap plot")
 
 def load_model_and_scalers():
     """Load the best performing model and preprocessing components"""
@@ -1030,12 +1031,14 @@ async def visualize_input(request: PredictionRequest):
         # Create visualizations with raw data
         time_series_plot = create_time_series_plot(raw_features, feature_names)
         distribution_plot = create_feature_distribution_plot(raw_features, feature_names)
+        correlation_plot = create_correlation_heatmap(raw_features, feature_names)
         
         return InputVisualization(
             input_data=raw_features.tolist(),
             feature_names=feature_names,
             time_series_plot=time_series_plot,
-            feature_distribution_plot=distribution_plot
+            feature_distribution_plot=distribution_plot,
+            correlation_plot=correlation_plot
         )
         
     except Exception as e:
