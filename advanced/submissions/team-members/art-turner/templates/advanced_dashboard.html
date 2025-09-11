@@ -853,7 +853,7 @@
             // Feature importance chart
             const ctx3 = document.getElementById('importanceChart').getContext('2d');
             importanceChart = new Chart(ctx3, {
-                type: 'horizontalBar',
+                type: 'bar',
                 data: {
                     labels: [],
                     datasets: [{
@@ -865,6 +865,7 @@
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {

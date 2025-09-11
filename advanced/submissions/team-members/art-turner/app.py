@@ -296,6 +296,21 @@ def create_input_summary(features_array: np.ndarray) -> Dict[str, Any]:
         }
     }
 
+def _iframe_from_html(html: str, height: int = 400) -> str:
+    """Wrap HTML in an iframe (data URL) so embedded scripts execute.
+
+    Directly injecting Plotly's HTML via innerHTML will not run <script> tags.
+    Using an iframe ensures the figure initializes properly.
+    """
+    try:
+        encoded = base64.b64encode(html.encode("utf-8")).decode("ascii")
+        return (
+            f"<iframe src=\"data:text/html;base64,{encoded}\" "
+            f"style=\"width: 100%; height: {height}px; border: 0;\" loading=\"lazy\"></iframe>"
+        )
+    except Exception:
+        return html
+
 def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create time series plot of input features"""
     try:
@@ -331,8 +346,8 @@ def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]
             title_text="Input Features Time Series (36 timesteps)",
             title_x=0.5
         )
-        
-        return fig.to_html(include_plotlyjs='cdn')
+        # Return as iframe to ensure scripts execute when inserted into DOM
+        return _iframe_from_html(fig.to_html(include_plotlyjs='cdn', full_html=True), height=600)
         
     except Exception as e:
         logger.error(f"Time series plot creation failed: {str(e)}")
@@ -369,8 +384,8 @@ def create_feature_distribution_plot(features_array: np.ndarray, feature_names: 
             title_text="Input Features Distribution",
             title_x=0.5
         )
-        
-        return fig.to_html(include_plotlyjs='cdn')
+        # Return as iframe to ensure scripts execute when inserted into DOM
+        return _iframe_from_html(fig.to_html(include_plotlyjs='cdn', full_html=True), height=600)
         
     except Exception as e:
         logger.error(f"Distribution plot creation failed: {str(e)}")
@@ -399,8 +414,8 @@ def create_correlation_heatmap(features_array: np.ndarray, feature_names: List[s
             height=500,
             width=600
         )
-        
-        return fig.to_html(include_plotlyjs='cdn')
+        # Return as iframe to ensure scripts execute when inserted into DOM
+        return _iframe_from_html(fig.to_html(include_plotlyjs='cdn', full_html=True), height=500)
         
     except Exception as e:
         logger.error(f"Correlation heatmap creation failed: {str(e)}")
