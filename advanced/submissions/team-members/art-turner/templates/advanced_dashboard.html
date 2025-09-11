@@ -1218,7 +1218,16 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
                 const data = await response.json();
+                
+                // Validate response structure
+                if (!data || !data.visualizations || !data.feature_statistics) {
+                    throw new Error('Invalid feature analysis response structure');
+                }
                 
                 // Display correlation heatmap
                 document.getElementById('correlation-heatmap').innerHTML = data.visualizations.correlation_heatmap;
@@ -1284,20 +1293,30 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
                 const data = await response.json();
+                
+                // Validate response structure
+                if (!data || !data.explanation_plots || !data.shap_values || !data.feature_names) {
+                    throw new Error('Invalid SHAP response structure');
+                }
                 
                 // Display SHAP plots
                 const plotsDiv = document.getElementById('shap-plots');
                 plotsDiv.innerHTML = `
                     <h4>📊 SHAP Summary Plot</h4>
-                    <img src="${data.explanation_plots.summary}" class="shap-plot" alt="SHAP Summary Plot">
+                    <img src="${data.explanation_plots.summary}" class="shap-plot" alt="SHAP Summary Plot" style="max-width: 100%; height: auto;">
                 `;
                 
                 // Display SHAP values table
                 const tableDiv = document.getElementById('shap-values-table');
-                const topFeatures = data.shap_values[0]
+                const shapValues = Array.isArray(data.shap_values[0]) ? data.shap_values[0] : data.shap_values;
+                const topFeatures = shapValues
                     .map((value, index) => ({
-                        feature: data.feature_names[index],
+                        feature: data.feature_names[index] || `Feature ${index}`,
                         value: value,
                         abs_value: Math.abs(value)
                     }))
@@ -1323,8 +1342,25 @@
                 updateStatus('healthy', 'SHAP explanation complete');
                 
             } catch (error) {
+                console.error('SHAP explanation failed:', error);
                 loadingDiv.style.display = 'none';
-                alert(`SHAP explanation failed: ${error.message}`);
+                
+                let errorMessage = error.message;
+                if (errorMessage.includes('SHAP library not available')) {
+                    errorMessage = 'SHAP library is not available on the server. This feature requires additional dependencies.';
+                } else if (errorMessage.includes('Matplotlib not available')) {
+                    errorMessage = 'Matplotlib is not available for plot generation. Check server configuration.';
+                } else if (errorMessage.includes('HTTP 500')) {
+                    errorMessage = 'Internal server error. Please try again or check server logs.';
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        ❌ SHAP explanation failed: ${errorMessage}
+                        <br><small>Try generating a fresh prediction and retry, or contact support if the issue persists.</small>
+                    </div>
+                `;
+                resultsDiv.style.display = 'block';
                 updateStatus('error', 'SHAP explanation failed');
             }
         }
@@ -1336,7 +1372,17 @@
             
             try {
                 const response = await fetch('/feature-importance');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
                 const data = await response.json();
+                
+                // Validate response structure
+                if (!data || !data.feature_importance) {
+                    throw new Error('Invalid feature importance response structure');
+                }
                 
                 // Update importance chart
                 const features = Object.keys(data.feature_importance);
@@ -1359,7 +1405,20 @@
                 updateStatus('healthy', 'Feature importance analysis complete');
                 
             } catch (error) {
-                alert(`Feature importance failed: ${error.message}`);
+                console.error('Feature importance failed:', error);
+                
+                let errorMessage = error.message;
+                if (errorMessage.includes('HTTP 500')) {
+                    errorMessage = 'Internal server error during feature importance calculation. Please try again.';
+                }
+                
+                document.getElementById('importance-results').innerHTML = `
+                    <div class="error">
+                        ❌ Feature importance failed: ${errorMessage}
+                        <br><small>Try refreshing the page and generating a new prediction.</small>
+                    </div>
+                `;
+                document.getElementById('importance-results').style.display = 'block';
                 updateStatus('error', 'Feature importance failed');
             }
         }

@@ -923,6 +923,18 @@ async def explain_prediction(request: PredictionRequest):
     if model is None or feature_scaler is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
+    # Check if SHAP is available
+    try:
+        import shap
+    except ImportError:
+        raise HTTPException(status_code=503, detail="SHAP library not available. Please install shap>=0.46.0")
+        
+    # Check if matplotlib is available  
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Matplotlib not available for plot generation")
+    
     try:
         # Process input
         features_array = np.array(request.features)
@@ -1015,8 +1027,18 @@ async def analyze_features(request: PredictionRequest):
         )
         
     except Exception as e:
-        logger.error(f"Feature analysis error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        error_msg = str(e)
+        logger.error(f"Feature analysis error: {error_msg}")
+        
+        # Provide more user-friendly error messages
+        if "shape" in error_msg.lower():
+            detail = "Invalid input data shape. Please ensure input data is properly formatted."
+        elif "nan" in error_msg.lower() or "inf" in error_msg.lower():
+            detail = "Input data contains invalid values (NaN or infinity). Please check data quality."
+        else:
+            detail = f"Analysis failed: {error_msg}"
+            
+        raise HTTPException(status_code=500, detail=detail)
 
 @app.post("/visualize-input", response_model=InputVisualization)
 async def visualize_input(request: PredictionRequest):
