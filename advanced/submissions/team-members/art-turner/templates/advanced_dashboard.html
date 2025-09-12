@@ -285,6 +285,13 @@
             border-left: 5px solid #28a745;
         }
         
+        /* Ensure prediction history lists stack vertically */
+        #prediction-history {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
         .error {
             background: linear-gradient(135deg, #f8d7da, #f5c6cb);
             border-left-color: #dc3545;
@@ -1240,7 +1247,7 @@
                 
                 // Display correlation heatmap
                 document.getElementById('correlation-heatmap').innerHTML = data.visualizations.correlation_heatmap;
-                
+
                 // Display feature statistics with proper units
                 const statsDiv = document.getElementById('feature-stats');
                 const featureUnits = {
@@ -1270,7 +1277,51 @@
                         </div>
                     `;
                 }).join('');
-                
+
+                // Update Feature Behavior Analysis chart (std deviation per feature)
+                try {
+                    const features = Object.keys(data.feature_statistics);
+                    const stds = features.map(f => data.feature_statistics[f]?.std ?? 0);
+                    // Sort by std desc for readability
+                    const paired = features.map((f, i) => ({ f, s: stds[i] }))
+                        .sort((a, b) => b.s - a.s);
+                    const sortedLabels = paired.map(p => p.f);
+                    const sortedStds = paired.map(p => p.s);
+
+                    const ctx = document.getElementById('featureChart').getContext('2d');
+                    if (featureChart) {
+                        featureChart.destroy();
+                    }
+                    featureChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: sortedLabels,
+                            datasets: [{
+                                label: 'Std Dev (36 timesteps)',
+                                data: sortedStds,
+                                backgroundColor: 'rgba(118, 75, 162, 0.6)',
+                                borderColor: '#764ba2',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: { display: true, text: 'Feature Behavior (Variability Over Window)' },
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: { beginAtZero: true, title: { display: true, text: 'Std Dev' } },
+                                y: { title: { display: false, text: '' } }
+                            }
+                        }
+                    });
+                } catch (chartErr) {
+                    console.error('Failed to render feature behavior chart:', chartErr);
+                }
+
                 updateStatus('healthy', 'Feature analysis complete');
                 
             } catch (error) {
@@ -1315,10 +1366,17 @@
                 
                 // Display SHAP plots
                 const plotsDiv = document.getElementById('shap-plots');
-                plotsDiv.innerHTML = `
+                let plotsHtml = `
                     <h4>📊 SHAP Summary Plot</h4>
-                    <img src="${data.explanation_plots.summary}" class="shap-plot" alt="SHAP Summary Plot" style="max-width: 100%; height: auto;">
+                    <img src="${data.explanation_plots.summary}" class="shap-plot" alt="SHAP Summary Plot" style="max-width: 100%; height: auto; margin-bottom: 16px;">
                 `;
+                if (data.explanation_plots && data.explanation_plots.beeswarm) {
+                    plotsHtml += `
+                        <h4>🐝 SHAP Beeswarm Plot</h4>
+                        <img src="${data.explanation_plots.beeswarm}" class="shap-plot" alt="SHAP Beeswarm Plot" style="max-width: 100%; height: auto;">
+                    `;
+                }
+                plotsDiv.innerHTML = plotsHtml;
                 
                 // Display SHAP values table
                 const tableDiv = document.getElementById('shap-values-table');
@@ -1331,7 +1389,7 @@
                     }))
                     .sort((a, b) => b.abs_value - a.abs_value)
                     .slice(0, 10);
-                
+
                 tableDiv.innerHTML = `
                     <h4>🎯 Top 10 Most Important Features</h4>
                     <div class="feature-summary">
@@ -1340,7 +1398,7 @@
                                 <div class="value" style="color: ${item.value >= 0 ? '#28a745' : '#dc3545'}">
                                     ${item.value.toFixed(4)}
                                 </div>
-                                <div class="label">${item.feature.replace(/_\d+$/, '')}</div>
+                                <div class="label">${item.feature}</div>
                             </div>
                         `).join('')}
                     </div>

@@ -396,6 +396,8 @@ def create_correlation_heatmap(features_array: np.ndarray, feature_names: List[s
     try:
         n_features = min(len(feature_names), 11, features_array.shape[1])
         correlation_matrix = np.corrcoef(features_array[:, :n_features].T)
+        # Replace NaNs/Infs (can occur for constant features) to make JSON/Plotly safe
+        correlation_matrix = np.nan_to_num(correlation_matrix, nan=0.0, posinf=1.0, neginf=-1.0)
         
         fig = go.Figure(data=go.Heatmap(
             z=correlation_matrix,
@@ -1006,15 +1008,36 @@ async def explain_prediction(request: PredictionRequest):
                 shap_arr = shap_arr.reshape(1, -1)
 
             explanation_plots = {}
-            try:
-                plt.figure(figsize=(10, 6))
-                shap.summary_plot(shap_arr, features_array.reshape(1, -1),
-                                  feature_names=feature_names_flat[: shap_arr.shape[1]],
-                                  show=False, max_display=20)
-                explanation_plots["summary"] = plot_to_base64(plt.gcf())
-            except Exception as plot_error:
-                logger.error(f"SHAP plot creation failed: {str(plot_error)}")
-                explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        try:
+            plt.figure(figsize=(10, 6))
+            shap.summary_plot(shap_arr, features_array.reshape(1, -1),
+                              feature_names=feature_names_flat[: shap_arr.shape[1]],
+                              show=False, max_display=20)
+            explanation_plots["summary"] = plot_to_base64(plt.gcf())
+        except Exception as plot_error:
+            logger.error(f"SHAP plot creation failed: {str(plot_error)}")
+            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+
+        # Attempt a beeswarm plot by evaluating SHAP on a small set of
+        # perturbed samples around the current input (for distribution)
+        try:
+            M = 12  # small number to keep computation light
+            eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
+            # Add mild noise (normalized space if normalize=True)
+            noise = np.random.normal(0, 0.02, size=eval_data.shape)
+            eval_data = eval_data + noise
+            shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=40)
+            if isinstance(shap_eval, list):
+                shap_eval_arr = np.array(shap_eval[0])
+            else:
+                shap_eval_arr = np.array(shap_eval)
+            plt.figure(figsize=(10, 6))
+            shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
+                              feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
+                              show=False, max_display=20)
+            explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
+        except Exception as bees_err:
+            logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
 
             exp_val = explainer.expected_value
             if isinstance(exp_val, (list, tuple, np.ndarray)):
@@ -1076,6 +1099,7 @@ async def analyze_features(request: PredictionRequest):
         
         # Calculate statistics on raw data
         correlation_matrix = np.corrcoef(raw_features.T)
+        correlation_matrix = np.nan_to_num(correlation_matrix, nan=0.0, posinf=1.0, neginf=-1.0)
         feature_stats = {}
         
         for i, name in enumerate(feature_names):
