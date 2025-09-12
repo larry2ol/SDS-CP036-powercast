@@ -235,10 +235,11 @@
         }
         
         .plotly-container {
-            height: 400px;
+            height: auto;
+            min-height: 500px;
             width: 100%;
             border-radius: 15px;
-            overflow: hidden;
+            overflow: visible;
         }
         
         .input-display {
@@ -379,6 +380,10 @@
             gap: 10px;
             margin-bottom: 20px;
         }
+        
+        /* Ensure only active input-analysis content shows by default */
+        .input-analysis-content { display: none; }
+        .input-analysis-content.active { display: block; }
         
         .input-tab {
             padding: 10px 20px;
@@ -1473,27 +1478,17 @@
             }
             
             const historyHTML = predictionHistory.slice(0, 10).map(pred => {
-                const total = pred.predictions[0] + pred.predictions[1] + pred.predictions[2];
+                const timestamp = new Date(pred.timestamp).toLocaleString('en-US', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', hour12: false
+                });
                 return `
-                    <div class="input-display">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong>📅 ${new Date(pred.timestamp).toLocaleString()}</strong>
-                            <span style="color: #667eea; font-weight: bold;">Total: ${total.toFixed(1)} kW</span>
-                        </div>
-                        <div class="zone-predictions" style="grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                            <div style="text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
-                                <div><strong>Zone 1</strong></div>
-                                <div style="font-size: 1.2em; color: #667eea;">${pred.zone_predictions['Zone 1'].toFixed(1)} kW</div>
-                            </div>
-                            <div style="text-align: center; padding: 10px; background: rgba(118, 75, 162, 0.1); border-radius: 8px;">
-                                <div><strong>Zone 2</strong></div>
-                                <div style="font-size: 1.2em; color: #764ba2;">${pred.zone_predictions['Zone 2'].toFixed(1)} kW</div>
-                            </div>
-                            <div style="text-align: center; padding: 10px; background: rgba(54, 209, 220, 0.1); border-radius: 8px;">
-                                <div><strong>Zone 3</strong></div>
-                                <div style="font-size: 1.2em; color: #36d1dc;">${pred.zone_predictions['Zone 3'].toFixed(1)} kW</div>
-                            </div>
-                        </div>
+                    <div class="result" style="margin: 10px 0;">
+                        <strong>📅 ${timestamp} (Tetouan Climate)</strong>
+                        ${pred.model_info?.api_call_time ? `<br><small style=\"color: #666;\">API called at: ${pred.model_info.api_call_time}</small>` : ''}
+                        <br>Zone 1: ${pred.zone_predictions['Zone 1'].toFixed(2)} kW | 
+                        Zone 2: ${pred.zone_predictions['Zone 2'].toFixed(2)} kW | 
+                        Zone 3: ${pred.zone_predictions['Zone 3'].toFixed(2)} kW
                     </div>
                 `;
             }).join('');
