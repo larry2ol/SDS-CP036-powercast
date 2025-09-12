@@ -977,67 +977,89 @@ async def explain_prediction(request: PredictionRequest):
             features_reshaped = features_array.reshape(-1, features_array.shape[-1])
             features_normalized = feature_scaler.transform(features_reshaped)
             features_array = features_normalized.reshape(features_array.shape)
-        
-        # Create SHAP explainer
-        input_tensor = torch.FloatTensor(features_array).unsqueeze(0)
 
-        def model_predict(x):
-            with torch.no_grad():
-                # x comes in as (n_samples, 36*11)
-                x_tensor = torch.FloatTensor(x).reshape(-1, *features_array.shape)
-                predictions = model(x_tensor)
-                return predictions.cpu().numpy()
-
-        # Generate background data for SHAP
-        background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
-        if request.normalize:
-            background_reshaped = background_data.reshape(-1, background_data.shape[-1])
-            background_normalized = feature_scaler.transform(background_reshaped)
-            background_data = background_normalized.reshape(background_data.shape)
-
-        explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
-        raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
-
-        # Normalize shap output to a (1, F) array for the first output
-        if isinstance(raw_shap_values, list):
-            shap_arr = np.array(raw_shap_values[0])  # first output
-        else:
-            shap_arr = np.array(raw_shap_values)
-        if shap_arr.ndim == 1:
-            shap_arr = shap_arr.reshape(1, -1)
-
-        # Prepare feature names for flattened input (length 36*features)
         num_timesteps, num_feats = features_array.shape
-        feature_names_flat = [f"{name}_{i}" for i in range(num_timesteps) for name in metadata["base_feature_cols"]][: shap_arr.shape[1]]
+        feature_names_flat = [f"{name}_{i}" for i in range(num_timesteps) for name in metadata["base_feature_cols"]]
 
-        # Create SHAP plots (best-effort)
-        explanation_plots = {}
+        # Try SHAP first
         try:
-            plt.figure(figsize=(10, 6))
-            shap.summary_plot(shap_arr, features_array.reshape(1, -1),
-                              feature_names=feature_names_flat, show=False, max_display=20)
-            explanation_plots["summary"] = plot_to_base64(plt.gcf())
-        except Exception as plot_error:
-            logger.error(f"SHAP plot creation failed: {str(plot_error)}")
-            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            def model_predict(x):
+                with torch.no_grad():
+                    x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
+                    predictions = model(x_tensor)
+                    return predictions.cpu().numpy()
 
-        # Convert values to simple 1D list for the client
-        shap_values_list = shap_arr.flatten().tolist()
+            background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
+            if request.normalize:
+                background_reshaped = background_data.reshape(-1, background_data.shape[-1])
+                background_normalized = feature_scaler.transform(background_reshaped)
+                background_data = background_normalized.reshape(background_data.shape)
 
-        # Base values handling (first output if multi-output)
-        exp_val = explainer.expected_value
-        if isinstance(exp_val, (list, tuple, np.ndarray)):
-            base_vals = list(np.array(exp_val).flatten()[:1])
-        else:
-            base_vals = [float(exp_val)]
+            explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
+            raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
 
-        return SHAPExplanation(
-            shap_values=shap_values_list,
-            feature_names=feature_names_flat,
-            base_values=base_vals,
-            explanation_plots=explanation_plots
-        )
-        
+            if isinstance(raw_shap_values, list):
+                shap_arr = np.array(raw_shap_values[0])
+            else:
+                shap_arr = np.array(raw_shap_values)
+            if shap_arr.ndim == 1:
+                shap_arr = shap_arr.reshape(1, -1)
+
+            explanation_plots = {}
+            try:
+                plt.figure(figsize=(10, 6))
+                shap.summary_plot(shap_arr, features_array.reshape(1, -1),
+                                  feature_names=feature_names_flat[: shap_arr.shape[1]],
+                                  show=False, max_display=20)
+                explanation_plots["summary"] = plot_to_base64(plt.gcf())
+            except Exception as plot_error:
+                logger.error(f"SHAP plot creation failed: {str(plot_error)}")
+                explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+
+            exp_val = explainer.expected_value
+            if isinstance(exp_val, (list, tuple, np.ndarray)):
+                base_vals = list(np.array(exp_val).flatten()[:1])
+            else:
+                base_vals = [float(exp_val)]
+
+            return SHAPExplanation(
+                shap_values=shap_arr.flatten().tolist(),
+                feature_names=feature_names_flat[: shap_arr.size],
+                base_values=base_vals,
+                explanation_plots=explanation_plots
+            )
+
+        except Exception as shap_err:
+            logger.error(f"SHAP computation failed, falling back to permutation importance: {shap_err}")
+
+            # Fallback: local permutation importance (signed impact on total power)
+            with torch.no_grad():
+                base_pred = model(torch.FloatTensor(features_array).unsqueeze(0))
+                base_denorm = target_scaler.inverse_transform(base_pred.cpu().numpy()).flatten()
+                base_total = float(base_denorm.sum())
+
+            impacts = np.zeros(num_timesteps * num_feats, dtype=float)
+            col_medians = np.median(features_array, axis=0)
+
+            for t in range(num_timesteps):
+                for f in range(num_feats):
+                    x_alt = features_array.copy()
+                    x_alt[t, f] = col_medians[f]
+                    with torch.no_grad():
+                        alt_pred = model(torch.FloatTensor(x_alt).unsqueeze(0))
+                        alt_denorm = target_scaler.inverse_transform(alt_pred.cpu().numpy()).flatten()
+                        alt_total = float(alt_denorm.sum())
+                    impacts[t * num_feats + f] = alt_total - base_total
+
+            explanation_plots = {"summary": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="}
+
+            return SHAPExplanation(
+                shap_values=impacts.tolist(),
+                feature_names=feature_names_flat,
+                base_values=[base_total],
+                explanation_plots=explanation_plots
+            )
+
     except Exception as e:
         logger.error(f"SHAP explanation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
@@ -1145,40 +1167,65 @@ async def visualize_input(request: PredictionRequest):
 
 @app.get("/feature-importance")
 async def get_global_feature_importance():
-    """Get global feature importance using multiple dummy samples"""
-    if model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
-    
+    """Model-based permutation importance over multiple dummy samples.
+
+    For each sample, permute each base feature across timesteps and measure
+    the absolute change in total predicted power (sum of zones).
+    """
+    if model is None or feature_scaler is None or target_scaler is None:
+        raise HTTPException(status_code=503, detail="Model components not loaded")
+
     try:
-        # Generate multiple dummy samples
-        importance_scores = {}
-        n_samples = 20
-        
+        rng = np.random.default_rng(42)
+        n_samples = 12
+        n_feats = len(metadata["base_feature_cols"])  # 11
+
+        # Accumulators
+        scores = np.zeros(n_feats, dtype=float)
+
         for _ in range(n_samples):
-            dummy_features = create_dummy_time_series(
+            # Generate one sample (raw)
+            x_raw = create_dummy_time_series(
                 n_timesteps=metadata["lookback_window"],
-                n_features=len(metadata["base_feature_cols"]),
-                advance_time=False  # Don't advance simulation time for analysis samples
+                n_features=n_feats,
+                advance_time=False
             )
-            
-            # Calculate feature variance as a proxy for importance
-            for i, feature_name in enumerate(metadata["base_feature_cols"]):
-                if feature_name not in importance_scores:
-                    importance_scores[feature_name] = []
-                importance_scores[feature_name].append(float(dummy_features[:, i].var()))
-        
-        # Average the importance scores
-        final_importance = {}
-        for feature_name in importance_scores:
-            final_importance[feature_name] = float(np.mean(importance_scores[feature_name]))
-        
+
+            # Normalize for model
+            x_norm = feature_scaler.transform(x_raw.reshape(-1, n_feats)).reshape(x_raw.shape)
+
+            # Baseline prediction (denormalized total)
+            with torch.no_grad():
+                base_pred = model(torch.FloatTensor(x_norm).unsqueeze(0))
+                base_denorm = target_scaler.inverse_transform(base_pred.cpu().numpy()).flatten()
+                base_total = float(base_denorm.sum())
+
+            # Permute each feature across time
+            for f in range(n_feats):
+                x_alt = x_norm.copy()
+                # Shuffle this column across timesteps
+                perm = rng.permutation(x_alt.shape[0])
+                x_alt[:, f] = x_alt[perm, f]
+                with torch.no_grad():
+                    alt_pred = model(torch.FloatTensor(x_alt).unsqueeze(0))
+                    alt_denorm = target_scaler.inverse_transform(alt_pred.cpu().numpy()).flatten()
+                    alt_total = float(alt_denorm.sum())
+                scores[f] += abs(alt_total - base_total)
+
+        # Average over samples
+        scores /= n_samples
+
+        final_importance = {
+            metadata["base_feature_cols"][i]: float(scores[i]) for i in range(n_feats)
+        }
+
         return {
             "feature_importance": final_importance,
-            "method": "variance-based",
+            "method": "permutation-based (temporal)",
             "samples_used": n_samples,
             "feature_names": metadata["base_feature_cols"]
         }
-        
+
     except Exception as e:
         logger.error(f"Feature importance error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Feature importance failed: {str(e)}")
