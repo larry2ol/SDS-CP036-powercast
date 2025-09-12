@@ -66,6 +66,43 @@ target_scaler = None
 metadata = None
 model_validation_metrics: Optional[Dict[str, float]] = None
 
+def partial_scale_features(arr: np.ndarray) -> np.ndarray:
+    """Apply feature_scaler to matching leading columns only when counts differ.
+
+    - arr can be (T,F) or (N,T,F). Returns array with same shape.
+    - If feature_scaler expects K features and arr has F != K, only the first K
+      columns are scaled; the remainder are left unchanged.
+    """
+    if feature_scaler is None:
+        return arr
+    try:
+        k = getattr(feature_scaler, 'n_features_in_', None)
+        if k is None:
+            # Fallback: try length of feature_names_in_
+            names = getattr(feature_scaler, 'feature_names_in_', None)
+            k = len(names) if names is not None else arr.shape[-1]
+        F = arr.shape[-1]
+        if arr.ndim == 2:
+            if k == F:
+                return feature_scaler.transform(arr)
+            else:
+                out = arr.copy()
+                out[:, :k] = feature_scaler.transform(arr[:, :k])
+                return out
+        elif arr.ndim == 3:
+            T = arr.shape[0] * arr.shape[1]
+            flat = arr.reshape(T, F)
+            if k == F:
+                flat_scaled = feature_scaler.transform(flat)
+            else:
+                flat_scaled = flat.copy()
+                flat_scaled[:, :k] = feature_scaler.transform(flat[:, :k])
+            return flat_scaled.reshape(arr.shape)
+        else:
+            return arr
+    except Exception:
+        return arr
+
 class PredictionRequest(BaseModel):
     """Request model for predictions"""
     features: List[List[float]] = Field(
@@ -544,8 +581,8 @@ def compute_validation_metrics(batch_size: int = 256, max_samples: Optional[int]
     if T != expected_T or F != expected_F:
         logger.warning(f"Validation shape differs from metadata: got (N={N}, T={T}, F={F}), expected T={expected_T}, F={expected_F}")
 
-    # Normalize inputs per feature
-    Xn = feature_scaler.transform(X.reshape(-1, F)).reshape(N, T, F)
+    # Normalize inputs per feature (partial scaling if needed)
+    Xn = partial_scale_features(X)
 
     # Batched inference
     preds_norm = []
@@ -1029,10 +1066,7 @@ async def predict(request: PredictionRequest):
         
         # Normalize features if requested (for model inference)
         if request.normalize:
-            # Reshape for scaler (samples x features)
-            features_reshaped = features_array.reshape(-1, features_array.shape[-1])
-            features_normalized = feature_scaler.transform(features_reshaped)
-            features_array = features_normalized.reshape(features_array.shape)
+            features_array = partial_scale_features(features_array)
         
         # Convert to tensor and add batch dimension
         input_tensor = torch.FloatTensor(features_array).unsqueeze(0)  # (1, 36, 11)
@@ -1151,9 +1185,7 @@ async def explain_prediction(request: PredictionRequest):
         # Process input
         features_array = np.array(request.features)
         if request.normalize:
-            features_reshaped = features_array.reshape(-1, features_array.shape[-1])
-            features_normalized = feature_scaler.transform(features_reshaped)
-            features_array = features_normalized.reshape(features_array.shape)
+            features_array = partial_scale_features(features_array)
 
         num_timesteps, num_feats = features_array.shape
         base_names = metadata["base_feature_cols"]
@@ -1167,11 +1199,9 @@ async def explain_prediction(request: PredictionRequest):
                     predictions = model(x_tensor)
                     return predictions.cpu().numpy()
 
-            background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
-            if request.normalize:
-                background_reshaped = background_data.reshape(-1, background_data.shape[-1])
-                background_normalized = feature_scaler.transform(background_reshaped)
-                background_data = background_normalized.reshape(background_data.shape)
+        background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
+        if request.normalize:
+            background_data = partial_scale_features(background_data)
 
             explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
             # Keep SHAP sample budget small to reduce memory/CPU
