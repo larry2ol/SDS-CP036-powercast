@@ -983,7 +983,7 @@ async def explain_prediction(request: PredictionRequest):
         num_timesteps, num_feats = features_array.shape
         feature_names_flat = [f"{name}_{i}" for i in range(num_timesteps) for name in metadata["base_feature_cols"]]
 
-        # Try SHAP first
+        # Try SHAP first in a single, well-formed try/except
         try:
             def model_predict(x):
                 with torch.no_grad():
@@ -1000,50 +1000,43 @@ async def explain_prediction(request: PredictionRequest):
             explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
             raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
 
-            if isinstance(raw_shap_values, list):
-                shap_arr = np.array(raw_shap_values[0])
-            else:
-                shap_arr = np.array(raw_shap_values)
+            # Normalize SHAP output to (1, F) for first output
+            shap_arr = np.array(raw_shap_values[0] if isinstance(raw_shap_values, list) else raw_shap_values)
             if shap_arr.ndim == 1:
                 shap_arr = shap_arr.reshape(1, -1)
 
             explanation_plots = {}
-        try:
-            plt.figure(figsize=(10, 6))
-            shap.summary_plot(shap_arr, features_array.reshape(1, -1),
-                              feature_names=feature_names_flat[: shap_arr.shape[1]],
-                              show=False, max_display=20)
-            explanation_plots["summary"] = plot_to_base64(plt.gcf())
-        except Exception as plot_error:
-            logger.error(f"SHAP plot creation failed: {str(plot_error)}")
-            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            # Summary plot
+            try:
+                plt.figure(figsize=(10, 6))
+                shap.summary_plot(shap_arr, features_array.reshape(1, -1),
+                                  feature_names=feature_names_flat[: shap_arr.shape[1]],
+                                  show=False, max_display=20)
+                explanation_plots["summary"] = plot_to_base64(plt.gcf())
+            except Exception as plot_error:
+                logger.error(f"SHAP plot creation failed: {str(plot_error)}")
+                explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 
-        # Attempt a beeswarm plot by evaluating SHAP on a small set of
-        # perturbed samples around the current input (for distribution)
-        try:
-            M = 12  # small number to keep computation light
-            eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
-            # Add mild noise (normalized space if normalize=True)
-            noise = np.random.normal(0, 0.02, size=eval_data.shape)
-            eval_data = eval_data + noise
-            shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=40)
-            if isinstance(shap_eval, list):
-                shap_eval_arr = np.array(shap_eval[0])
-            else:
-                shap_eval_arr = np.array(shap_eval)
-            plt.figure(figsize=(10, 6))
-            shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
-                              feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
-                              show=False, max_display=20)
-            explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
-        except Exception as bees_err:
-            logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
+            # Beeswarm attempt on small neighborhood
+            try:
+                M = 12
+                eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
+                noise = np.random.normal(0, 0.02, size=eval_data.shape)
+                eval_data = eval_data + noise
+                shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=40)
+                shap_eval_arr = np.array(shap_eval[0] if isinstance(shap_eval, list) else shap_eval)
+                plt.figure(figsize=(10, 6))
+                shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
+                                  feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
+                                  show=False, max_display=20)
+                explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
+            except Exception as bees_err:
+                logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
 
             exp_val = explainer.expected_value
-            if isinstance(exp_val, (list, tuple, np.ndarray)):
-                base_vals = list(np.array(exp_val).flatten()[:1])
-            else:
-                base_vals = [float(exp_val)]
+            base_vals = (list(np.array(exp_val).flatten()[:1])
+                         if isinstance(exp_val, (list, tuple, np.ndarray))
+                         else [float(exp_val)])
 
             return SHAPExplanation(
                 shap_values=shap_arr.flatten().tolist(),
@@ -1063,7 +1056,6 @@ async def explain_prediction(request: PredictionRequest):
 
             impacts = np.zeros(num_timesteps * num_feats, dtype=float)
             col_medians = np.median(features_array, axis=0)
-
             for t in range(num_timesteps):
                 for f in range(num_feats):
                     x_alt = features_array.copy()
