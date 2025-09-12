@@ -1199,9 +1199,9 @@ async def explain_prediction(request: PredictionRequest):
                     predictions = model(x_tensor)
                     return predictions.cpu().numpy()
 
-        background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
-        if request.normalize:
-            background_data = partial_scale_features(background_data)
+            background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
+            if request.normalize:
+                background_data = partial_scale_features(background_data)
 
             explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
             # Keep SHAP sample budget small to reduce memory/CPU
@@ -1249,7 +1249,7 @@ async def explain_prediction(request: PredictionRequest):
 
             return SHAPExplanation(
                 shap_values=shap_arr.flatten().tolist(),
-            feature_names=feature_names_flat[: shap_arr.size],
+                feature_names=feature_names_flat[: shap_arr.size],
                 base_values=base_vals,
                 explanation_plots=explanation_plots
             )
