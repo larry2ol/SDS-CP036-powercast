@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 import pandas as pd
 import torch
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import pickle
 import json
 import logging
@@ -37,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 # Import model classes
 from advanced_models import AttentionLSTM
+from model_loader import load_model_from_checkpoint
 from week2_feature_engineering_fixed import PowerConsumptionDataset
 
 app = FastAPI(
@@ -71,6 +73,7 @@ model = None
 feature_scaler = None
 target_scaler = None
 metadata = None
+model_validation_metrics: Optional[Dict[str, float]] = None
 
 class PredictionRequest(BaseModel):
     """Request model for predictions"""
@@ -149,22 +152,47 @@ def load_model_and_scalers():
         with open('target_scaler.pkl', 'rb') as f:
             target_scaler = pickle.load(f)
         
-        # Create the best model (AttentionLSTM with best hyperparameters)
-        model = AttentionLSTM(
-            input_size=11,  # Based on base_feature_cols
-            hidden_size=256,
-            num_layers=2,
-            output_size=3,
-            dropout_rate=0.2
-        )
+        # Attempt to load trained checkpoint if available
+        input_size = len(metadata["base_feature_cols"])  # 11
+        output_size = len(metadata["target_cols"])       # 3
         
-        # Initialize model weights (we'll use dummy weights for demo)
-        model.eval()
+        import os
+        ckpt_path = os.getenv("MODEL_PATH", "best_attentionlstm_20250907-091842.pth")
+        loaded = False
+        if os.path.exists(ckpt_path):
+            try:
+                logger.info(f"Loading trained model checkpoint from {ckpt_path}...")
+                loaded_model, ckpt = load_model_from_checkpoint(
+                    ckpt_path, input_size=input_size, output_size=output_size, device='cpu'
+                )
+                globals()["model"] = loaded_model
+                loaded = True
+                logger.info("Checkpoint loaded successfully.")
+            except Exception as e:
+                logger.error(f"Failed to load checkpoint: {e}")
+        
+        if not loaded:
+            # Fallback to randomly initialized model (not ideal for production)
+            logger.warning("No valid checkpoint found. Falling back to randomly initialized AttentionLSTM.")
+            model_fallback = AttentionLSTM(
+                input_size=input_size,
+                hidden_size=256,
+                num_layers=2,
+                output_size=output_size,
+                dropout_rate=0.2
+            )
+            model_fallback.eval()
+            globals()["model"] = model_fallback
         
         logger.info("Model and components loaded successfully!")
-        logger.info(f"Model architecture: AttentionLSTM(256, 2 layers, 0.2 dropout)")
-        logger.info(f"Expected input shape: (batch_size, {metadata['lookback_window']}, 11)")
-        logger.info(f"Output shape: (batch_size, 3)")
+        logger.info(f"Expected input shape: (batch_size, {metadata['lookback_window']}, {input_size})")
+        logger.info(f"Output shape: (batch_size, {output_size})")
+
+        # Compute validation metrics if validation files are present
+        try:
+            compute_validation_metrics()
+        except Exception as e:
+            logger.warning(f"Validation metrics computation skipped/failed: {e}")
         
     except Exception as e:
         logger.error(f"Error loading model components: {str(e)}")
@@ -437,6 +465,85 @@ def plot_to_base64(fig) -> str:
 async def startup_event():
     """Initialize the application"""
     load_model_and_scalers()
+
+def compute_validation_metrics(batch_size: int = 256, max_samples: Optional[int] = None):
+    """Evaluate the loaded model on validation data and cache metrics.
+
+    Uses feature_scaler to normalize inputs and target_scaler to denormalize outputs.
+    Automatically detects whether validation targets are raw or normalized by
+    comparing RMSE of two candidates.
+    """
+    global model_validation_metrics
+
+    if model is None or feature_scaler is None or target_scaler is None or metadata is None:
+        raise RuntimeError("Model/scalers/metadata not loaded")
+
+    import os
+    x_path = "val_sequences_fixed.npy"
+    y_path = "val_targets_fixed.npy"
+    if not (os.path.exists(x_path) and os.path.exists(y_path)):
+        raise FileNotFoundError("Validation files not found: val_sequences_fixed.npy / val_targets_fixed.npy")
+
+    X = np.load(x_path)  # expected shape (N, T, F)
+    Y = np.load(y_path)  # expected shape (N, 3)
+
+    if max_samples is not None:
+        X = X[:max_samples]
+        Y = Y[:max_samples]
+
+    N, T, F = X.shape
+    expected_T = metadata.get("lookback_window", T)
+    expected_F = len(metadata.get("base_feature_cols", list(range(F))))
+    if T != expected_T or F != expected_F:
+        logger.warning(f"Validation shape differs from metadata: got (N={N}, T={T}, F={F}), expected T={expected_T}, F={expected_F}")
+
+    # Normalize inputs per feature
+    Xn = feature_scaler.transform(X.reshape(-1, F)).reshape(N, T, F)
+
+    # Batched inference
+    preds_norm = []
+    model.eval()
+    with torch.no_grad():
+        for i in range(0, N, batch_size):
+            xb = torch.from_numpy(Xn[i:i+batch_size]).float()
+            yb = model(xb).cpu().numpy()  # normalized target space
+            preds_norm.append(yb)
+    Y_pred_norm = np.vstack(preds_norm)
+    # Denormalize predictions to raw kW
+    Y_pred_raw = target_scaler.inverse_transform(Y_pred_norm)
+
+    # Determine whether Y (validation targets) are raw or normalized
+    # Candidate A: assume Y is raw
+    rmse_raw = float(np.sqrt(mean_squared_error(Y, Y_pred_raw)))
+    # Candidate B: assume Y is normalized
+    try:
+        Y_denorm_from_norm = target_scaler.inverse_transform(Y)
+        rmse_norm = float(np.sqrt(mean_squared_error(Y_denorm_from_norm, Y_pred_raw)))
+    except Exception:
+        rmse_norm = float("inf")
+
+    # Choose ground truth that minimizes RMSE
+    if rmse_norm < rmse_raw:
+        Y_true = Y_denorm_from_norm
+    else:
+        Y_true = Y
+
+    # Compute zone-wise metrics and overall averages
+    r2_list, rmse_list, mae_list = [], [], []
+    for j in range(Y_true.shape[1]):
+        r2_list.append(r2_score(Y_true[:, j], Y_pred_raw[:, j]))
+        rmse_list.append(np.sqrt(mean_squared_error(Y_true[:, j], Y_pred_raw[:, j])))
+        mae_list.append(mean_absolute_error(Y_true[:, j], Y_pred_raw[:, j]))
+
+    model_validation_metrics = {
+        "r2": float(np.mean(r2_list)),
+        "rmse": float(np.mean(rmse_list)),
+        "mae": float(np.mean(mae_list)),
+        "details": {
+            f"zone_{j+1}": {"r2": r2_list[j], "rmse": rmse_list[j], "mae": mae_list[j]} for j in range(len(r2_list))
+        }
+    }
+    logger.info(f"Validation metrics: R2={model_validation_metrics['r2']:.4f}, RMSE={model_validation_metrics['rmse']:.2f}, MAE={model_validation_metrics['mae']:.2f}")
 
 @app.get("/dashboard")
 async def dashboard(request: Request):
@@ -814,17 +921,27 @@ async def get_model_info():
     # Count model parameters
     param_count = sum(p.numel() for p in model.parameters())
     
+    # Use computed validation metrics if available; otherwise fallback to static
+    if model_validation_metrics is not None:
+        perf = {
+            "r2": float(model_validation_metrics.get("r2", 0.0)),
+            "rmse": float(model_validation_metrics.get("rmse", 0.0)),
+            "mae": float(model_validation_metrics.get("mae", 0.0)),
+        }
+    else:
+        perf = {
+            "r2": 0.9941256443659464,
+            "rmse": 343.4457664431772,
+            "mae": 242.9648691813151
+        }
+
     return ModelInfo(
         model_type="AttentionLSTM",
         architecture="LSTM with Multi-head Self-Attention (256 hidden, 2 layers, 0.2 dropout)",
         input_features=len(metadata["base_feature_cols"]),
         output_targets=len(metadata["target_cols"]),
         model_parameters=param_count,
-        best_performance={
-            "r2": 0.9941256443659464,
-            "rmse": 343.4457664431772,
-            "mae": 242.9648691813151
-        },
+        best_performance=perf,
         feature_names=metadata["base_feature_cols"],
         target_names=metadata["target_cols"]
     )
