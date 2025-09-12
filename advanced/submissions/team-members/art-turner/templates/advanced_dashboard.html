@@ -1149,6 +1149,8 @@
                 'Wind Speed': 'm/s',
                 'general diffuse flows': 'W/m²',
                 'diffuse flows': 'W/m²',
+                'Reflected Solar': 'W/m²',
+                'Solar Radiation': 'W/m²',
                 'hour_sin': '',
                 'hour_cos': '',
                 'dow_sin': '',
@@ -1265,12 +1267,19 @@
                     'Wind Speed': 'm/s',
                     'general diffuse flows': 'W/m²',
                     'diffuse flows': 'W/m²',
+                    'Reflected Solar': 'W/m²',
+                    'Solar Radiation': 'W/m²',
                     'hour_sin': '',
                     'hour_cos': '',
                     'dow_sin': '',
                     'dow_cos': '',
                     'month_sin': '',
-                    'month_cos': ''
+                    'month_cos': '',
+                    'Zone 1 Power Consumption': 'kW',
+                    'Zone 2  Power Consumption': 'kW',
+                    'Zone 3  Power Consumption': 'kW',
+                    'Zone 2 Power Consumption': 'kW',
+                    'Zone 3 Power Consumption': 'kW'
                 };
                 
                 statsDiv.innerHTML = Object.keys(data.feature_statistics).map(feature => {

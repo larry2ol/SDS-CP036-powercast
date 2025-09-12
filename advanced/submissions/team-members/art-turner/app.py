@@ -153,15 +153,37 @@ def load_model_and_scalers():
             target_scaler = pickle.load(f)
         
         # Attempt to load trained checkpoint if available
-        input_size = len(metadata["base_feature_cols"])  # 11
+        input_size = len(metadata["base_feature_cols"])  # default 11
         output_size = len(metadata["target_cols"])       # 3
         
-        import os
+        import os, torch as _torch
         ckpt_path = os.getenv("MODEL_PATH", "best_attentionlstm_20250907-091842.pth")
         loaded = False
         if os.path.exists(ckpt_path):
             try:
                 logger.info(f"Loading trained model checkpoint from {ckpt_path}...")
+                # Peek into checkpoint to infer input size if needed
+                ckpt_raw = _torch.load(ckpt_path, map_location='cpu', weights_only=False)
+                state = ckpt_raw.get('model_state_dict', ckpt_raw.state_dict() if hasattr(ckpt_raw, 'state_dict') else None)
+                inferred_in = None
+                if isinstance(state, dict):
+                    w = state.get('lstm.weight_ih_l0')
+                    if w is not None and w.dim() == 2:
+                        inferred_in = int(w.shape[1])
+                if inferred_in and inferred_in != input_size:
+                    logger.warning(f"Metadata input_size={input_size}, checkpoint expects {inferred_in}. Adjusting to {inferred_in}.")
+                    input_size = inferred_in
+                    # Align feature names: prefer metadata['feature_cols'] if it matches inferred size
+                    feature_cols_full = list(metadata.get("feature_cols", []))
+                    if len(feature_cols_full) == input_size:
+                        metadata["base_feature_cols"] = feature_cols_full
+                    else:
+                        # Fallback: extend base_feature_cols with placeholders
+                        base_cols = list(metadata.get("base_feature_cols", []))
+                        if len(base_cols) < input_size:
+                            extra = [f"extra_feature_{i+1}" for i in range(input_size - len(base_cols))]
+                            metadata["base_feature_cols"] = base_cols + extra
+                
                 loaded_model, ckpt = load_model_from_checkpoint(
                     ckpt_path, input_size=input_size, output_size=output_size, device='cpu'
                 )
@@ -315,7 +337,7 @@ def create_input_summary(features_array: np.ndarray) -> Dict[str, Any]:
         "min_values": features_array.min(axis=0).tolist(),
         "max_values": features_array.max(axis=0).tolist(),
         "feature_ranges": {
-            metadata["base_feature_cols"][i]: {
+            friendly_feature_name(metadata["base_feature_cols"][i]): {
                 "min": float(features_array[:, i].min()),
                 "max": float(features_array[:, i].max()),
                 "mean": float(features_array[:, i].mean()),
@@ -323,6 +345,26 @@ def create_input_summary(features_array: np.ndarray) -> Dict[str, Any]:
             } for i in range(features_array.shape[1])
         }
     }
+
+def friendly_feature_name(name: str) -> str:
+    """Map raw feature names to user-friendly labels for UI/plots."""
+    mapping = {
+        'diffuse flows': 'Solar Radiation',
+        'general diffuse flows': 'Reflected Solar',
+        'hour_sin': 'Hour (sin)',
+        'hour_cos': 'Hour (cos)',
+        'dow_sin': 'Day of Week (sin)',
+        'dow_cos': 'Day of Week (cos)',
+        'month_sin': 'Month (sin)',
+        'month_cos': 'Month (cos)',
+        'Zone 1 Power Consumption': 'Zone 1 Power Consumption',
+        'Zone 2  Power Consumption': 'Zone 2 Power Consumption',
+        'Zone 3  Power Consumption': 'Zone 3 Power Consumption',
+    }
+    return mapping.get(name, name)
+
+def map_friendly_names(feature_names: List[str]) -> List[str]:
+    return [friendly_feature_name(n) for n in feature_names]
 
 def _iframe_from_html(html: str, height: int = 400) -> str:
     """Wrap HTML in an iframe (data URL) so embedded scripts execute.
@@ -345,9 +387,12 @@ def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]
         # Limit to first 11 features to fit 3x4 grid
         n_features = min(len(feature_names), 11, features_array.shape[1])
         
+        # Apply friendly names
+        display_names = map_friendly_names(feature_names[:n_features])
+
         fig = make_subplots(
             rows=3, cols=4,
-            subplot_titles=feature_names[:n_features],
+            subplot_titles=display_names,
             vertical_spacing=0.08,
             horizontal_spacing=0.06
         )
@@ -362,7 +407,7 @@ def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]
                 go.Scatter(
                     x=list(range(len(features_array))),
                     y=features_array[:, i],
-                    name=feature_names[i],
+                    name=display_names[i],
                     line=dict(color=colors[i % len(colors)], width=2),
                     showlegend=False
                 ),
@@ -385,9 +430,10 @@ def create_feature_distribution_plot(features_array: np.ndarray, feature_names: 
     """Create feature distribution plots"""
     try:
         n_features = min(len(feature_names), 11, features_array.shape[1])
+        display_names = map_friendly_names(feature_names[:n_features])
         fig = make_subplots(
             rows=3, cols=4,
-            subplot_titles=feature_names[:n_features],
+            subplot_titles=display_names,
             vertical_spacing=0.08,
             horizontal_spacing=0.06
         )
@@ -399,7 +445,7 @@ def create_feature_distribution_plot(features_array: np.ndarray, feature_names: 
             fig.add_trace(
                 go.Histogram(
                     x=features_array[:, i],
-                    name=feature_names[i],
+                    name=display_names[i],
                     nbinsx=10,
                     opacity=0.7,
                     showlegend=False
@@ -427,10 +473,11 @@ def create_correlation_heatmap(features_array: np.ndarray, feature_names: List[s
         # Replace NaNs/Infs (can occur for constant features) to make JSON/Plotly safe
         correlation_matrix = np.nan_to_num(correlation_matrix, nan=0.0, posinf=1.0, neginf=-1.0)
         
+        display_names = map_friendly_names(feature_names[:n_features])
         fig = go.Figure(data=go.Heatmap(
             z=correlation_matrix,
-            x=feature_names[:n_features],
-            y=feature_names[:n_features],
+            x=display_names,
+            y=display_names,
             colorscale='RdBu',
             zmid=0,
             text=np.round(correlation_matrix, 2),
@@ -1098,7 +1145,8 @@ async def explain_prediction(request: PredictionRequest):
             features_array = features_normalized.reshape(features_array.shape)
 
         num_timesteps, num_feats = features_array.shape
-        feature_names_flat = [f"{name}_{i}" for i in range(num_timesteps) for name in metadata["base_feature_cols"]]
+        base_names = metadata["base_feature_cols"]
+        feature_names_flat = [f"{friendly_feature_name(name)}_{i}" for i in range(num_timesteps) for name in base_names]
 
         # Try SHAP first in a single, well-formed try/except
         try:
@@ -1157,7 +1205,7 @@ async def explain_prediction(request: PredictionRequest):
 
             return SHAPExplanation(
                 shap_values=shap_arr.flatten().tolist(),
-                feature_names=feature_names_flat[: shap_arr.size],
+            feature_names=feature_names_flat[: shap_arr.size],
                 base_values=base_vals,
                 explanation_plots=explanation_plots
             )
@@ -1212,7 +1260,8 @@ async def analyze_features(request: PredictionRequest):
         feature_stats = {}
         
         for i, name in enumerate(feature_names):
-            feature_stats[name] = {
+            pretty = friendly_feature_name(name)
+            feature_stats[pretty] = {
                 "mean": float(raw_features[:, i].mean()),
                 "std": float(raw_features[:, i].std()),
                 "min": float(raw_features[:, i].min()),
@@ -1288,7 +1337,7 @@ async def visualize_input(request: PredictionRequest):
         
         return InputVisualization(
             input_data=raw_features.tolist(),
-            feature_names=feature_names,
+            feature_names=map_friendly_names(feature_names),
             time_series_plot=time_series_plot,
             feature_distribution_plot=distribution_plot,
             correlation_plot=correlation_plot
