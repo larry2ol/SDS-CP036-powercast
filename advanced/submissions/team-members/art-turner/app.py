@@ -20,17 +20,8 @@ import threading
 from datetime import datetime, timedelta
 import uvicorn
 from pathlib import Path
-import shap
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly
 import base64
 from io import BytesIO
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -384,6 +375,10 @@ def _iframe_from_html(html: str, height: int = 400) -> str:
 def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create time series plot of input features"""
     try:
+        # Local imports to reduce startup memory
+        from plotly.subplots import make_subplots
+        import plotly.express as px
+        import plotly.graph_objects as go
         # Limit to first 11 features to fit 3x4 grid
         n_features = min(len(feature_names), 11, features_array.shape[1])
         
@@ -429,6 +424,9 @@ def create_time_series_plot(features_array: np.ndarray, feature_names: List[str]
 def create_feature_distribution_plot(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create feature distribution plots"""
     try:
+        # Local imports to reduce startup memory
+        from plotly.subplots import make_subplots
+        import plotly.graph_objects as go
         n_features = min(len(feature_names), 11, features_array.shape[1])
         display_names = map_friendly_names(feature_names[:n_features])
         fig = make_subplots(
@@ -468,6 +466,8 @@ def create_feature_distribution_plot(features_array: np.ndarray, feature_names: 
 def create_correlation_heatmap(features_array: np.ndarray, feature_names: List[str]) -> str:
     """Create correlation heatmap"""
     try:
+        # Local imports to reduce startup memory
+        import plotly.graph_objects as go
         n_features = min(len(feature_names), 11, features_array.shape[1])
         correlation_matrix = np.corrcoef(features_array[:, :n_features].T)
         # Replace NaNs/Infs (can occur for constant features) to make JSON/Plotly safe
@@ -968,6 +968,17 @@ async def get_model_info():
     # Count model parameters
     param_count = sum(p.numel() for p in model.parameters())
     
+    # Compute validation metrics only if explicitly enabled (saves memory)
+    import os as _os
+    global model_validation_metrics
+    if _os.getenv('ENABLE_VALIDATION_METRICS', '0').lower() in ('1', 'true', 'yes') and model_validation_metrics is None:
+        try:
+            # Keep a cap on samples to limit memory/CPU
+            max_samples = int(_os.getenv('VALIDATION_MAX_SAMPLES', '2000'))
+            compute_validation_metrics(max_samples=max_samples)
+        except Exception as e:
+            logger.warning(f"Could not compute validation metrics: {e}")
+
     # Use computed validation metrics if available; otherwise fallback to static
     if model_validation_metrics is not None:
         perf = {
@@ -1124,14 +1135,14 @@ async def explain_prediction(request: PredictionRequest):
     if model is None or feature_scaler is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
-    # Check if SHAP is available
+    # Lazy imports to reduce baseline memory
     try:
         import shap
     except ImportError:
         raise HTTPException(status_code=503, detail="SHAP library not available. Please install shap>=0.46.0")
-        
-    # Check if matplotlib is available  
     try:
+        import matplotlib
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
     except ImportError:
         raise HTTPException(status_code=503, detail="Matplotlib not available for plot generation")
@@ -1163,7 +1174,8 @@ async def explain_prediction(request: PredictionRequest):
                 background_data = background_normalized.reshape(background_data.shape)
 
             explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
-            raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=50)
+            # Keep SHAP sample budget small to reduce memory/CPU
+            raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=20)
 
             # Normalize SHAP output to (1, F) for first output
             shap_arr = np.array(raw_shap_values[0] if isinstance(raw_shap_values, list) else raw_shap_values)
@@ -1182,21 +1194,23 @@ async def explain_prediction(request: PredictionRequest):
                 logger.error(f"SHAP plot creation failed: {str(plot_error)}")
                 explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 
-            # Beeswarm attempt on small neighborhood
-            try:
-                M = 12
-                eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
-                noise = np.random.normal(0, 0.02, size=eval_data.shape)
-                eval_data = eval_data + noise
-                shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=40)
-                shap_eval_arr = np.array(shap_eval[0] if isinstance(shap_eval, list) else shap_eval)
-                plt.figure(figsize=(10, 6))
-                shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
-                                  feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
-                                  show=False, max_display=20)
-                explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
-            except Exception as bees_err:
-                logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
+            # Optional beeswarm (disabled by default for low-memory plans)
+            import os as _os
+            if _os.getenv('ENABLE_BEESWARM', '0').lower() in ('1', 'true', 'yes'):
+                try:
+                    M = 8  # keep small
+                    eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
+                    noise = np.random.normal(0, 0.02, size=eval_data.shape)
+                    eval_data = eval_data + noise
+                    shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=20)
+                    shap_eval_arr = np.array(shap_eval[0] if isinstance(shap_eval, list) else shap_eval)
+                    plt.figure(figsize=(10, 6))
+                    shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
+                                      feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
+                                      show=False, max_display=20)
+                    explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
+                except Exception as bees_err:
+                    logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
 
             exp_val = explainer.expected_value
             base_vals = (list(np.array(exp_val).flatten()[:1])
