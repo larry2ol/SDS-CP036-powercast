@@ -260,7 +260,12 @@ simulation_state = {
 simulation_lock = threading.Lock()
 
 def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11, advance_time: bool = True) -> np.ndarray:
-    """Create realistic time-progressing dummy time series data for simulation"""
+    """Create realistic time-progressing dummy time series data for simulation.
+
+    Generates the base 11 environmental/cyclical features. If n_features > 11,
+    appends 3 autoregressive proxy columns for Zone 1/2/3 Power Consumption
+    to reach 14 features, matching checkpoints trained with AR inputs.
+    """
     global simulation_state
     
     if advance_time:
@@ -352,6 +357,21 @@ def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11, advanc
         timestep_features.append(np.sin(month_rad))  # month_sin
         timestep_features.append(np.cos(month_rad))  # month_cos
         
+        # If model expects autoregressive power features (total 14 features),
+        # synthesize plausible values from environmental signals.
+        if n_features >= 14:
+            # Proxy total consumption based on temp and solar (rough heuristic)
+            # Higher when hot (cooling) and when solar is low (grid demand)
+            solar = general_diffuse + 0.5 * diffuse
+            demand_base = 1200 + 12 * max(temp - 18, 0) + 6 * max(16 - temp, 0)
+            demand_solar_adj = -0.3 * (solar / 1000.0) * 800  # reduce when solar high
+            total_kw = demand_base + demand_solar_adj + np.random.normal(0, 40)
+            # Split into three zones
+            z1 = max(0.0, 0.45 * total_kw + np.random.normal(0, 20))
+            z2 = max(0.0, 0.33 * total_kw + np.random.normal(0, 15))
+            z3 = max(0.0, 0.22 * total_kw + np.random.normal(0, 10))
+            timestep_features.extend([z1, z2, z3])
+
         features.append(timestep_features)
     
     return np.array(features)
