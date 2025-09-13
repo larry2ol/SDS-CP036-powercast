@@ -1217,67 +1217,67 @@ async def explain_prediction(request: PredictionRequest):
 
         # Try SHAP first only if available; otherwise skip to fallback
         if shap is not None and plt is not None:
-            try:
-                def model_predict(x):
-                    with torch.no_grad():
-                        x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
-                        predictions = model(x_tensor)
-                        return predictions.cpu().numpy()
+            def model_predict(x):
+                with torch.no_grad():
+                    x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
+                    predictions = model(x_tensor)
+                    return predictions.cpu().numpy()
 
+            try:
                 background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
                 if request.normalize:
                     background_data = partial_scale_features(background_data)
 
                 explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
-            # Keep SHAP sample budget small to reduce memory/CPU
-            raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=20)
+                # Keep SHAP sample budget small to reduce memory/CPU
+                raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=20)
 
-            # Normalize SHAP output to (1, F) for first output
-            shap_arr = np.array(raw_shap_values[0] if isinstance(raw_shap_values, list) else raw_shap_values)
-            if shap_arr.ndim == 1:
-                shap_arr = shap_arr.reshape(1, -1)
+                # Normalize SHAP output to (1, F) for first output
+                shap_arr = np.array(raw_shap_values[0] if isinstance(raw_shap_values, list) else raw_shap_values)
+                if shap_arr.ndim == 1:
+                    shap_arr = shap_arr.reshape(1, -1)
 
-            explanation_plots = {}
-            # Summary plot
-            try:
-                plt.figure(figsize=(10, 6))
-                shap.summary_plot(shap_arr, features_array.reshape(1, -1),
-                                  feature_names=feature_names_flat[: shap_arr.shape[1]],
-                                  show=False, max_display=20)
-                explanation_plots["summary"] = plot_to_base64(plt.gcf())
-            except Exception as plot_error:
-                logger.error(f"SHAP plot creation failed: {str(plot_error)}")
-                explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-
-            # Optional beeswarm (disabled by default for low-memory plans)
-            import os as _os
-            if _os.getenv('ENABLE_BEESWARM', '0').lower() in ('1', 'true', 'yes'):
+                explanation_plots = {}
+                # Summary plot
                 try:
-                    M = 8  # keep small
-                    eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
-                    noise = np.random.normal(0, 0.02, size=eval_data.shape)
-                    eval_data = eval_data + noise
-                    shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=20)
-                    shap_eval_arr = np.array(shap_eval[0] if isinstance(shap_eval, list) else shap_eval)
                     plt.figure(figsize=(10, 6))
-                    shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
-                                      feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
+                    shap.summary_plot(shap_arr, features_array.reshape(1, -1),
+                                      feature_names=feature_names_flat[: shap_arr.shape[1]],
                                       show=False, max_display=20)
-                    explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
-                except Exception as bees_err:
-                    logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
+                    explanation_plots["summary"] = plot_to_base64(plt.gcf())
+                except Exception as plot_error:
+                    logger.error(f"SHAP plot creation failed: {str(plot_error)}")
+                    explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 
-            exp_val = explainer.expected_value
-            base_vals = (list(np.array(exp_val).flatten()[:1])
-                         if isinstance(exp_val, (list, tuple, np.ndarray))
-                         else [float(exp_val)])
+                # Optional beeswarm (disabled by default for low-memory plans)
+                import os as _os
+                if _os.getenv('ENABLE_BEESWARM', '0').lower() in ('1', 'true', 'yes'):
+                    try:
+                        M = 8  # keep small
+                        eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
+                        noise = np.random.normal(0, 0.02, size=eval_data.shape)
+                        eval_data = eval_data + noise
+                        shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=20)
+                        shap_eval_arr = np.array(shap_eval[0] if isinstance(shap_eval, list) else shap_eval)
+                        plt.figure(figsize=(10, 6))
+                        shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
+                                          feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
+                                          show=False, max_display=20)
+                        explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
+                    except Exception as bees_err:
+                        logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
 
-            return SHAPExplanation(
-                shap_values=shap_arr.flatten().tolist(),
-                feature_names=feature_names_flat[: shap_arr.size],
-                base_values=base_vals,
-                explanation_plots=explanation_plots
-            )
+                exp_val = explainer.expected_value
+                base_vals = (list(np.array(exp_val).flatten()[:1])
+                             if isinstance(exp_val, (list, tuple, np.ndarray))
+                             else [float(exp_val)])
+
+                return SHAPExplanation(
+                    shap_values=shap_arr.flatten().tolist(),
+                    feature_names=feature_names_flat[: shap_arr.size],
+                    base_values=base_vals,
+                    explanation_plots=explanation_plots
+                )
         except Exception as shap_err:
             logger.error(f"SHAP computation failed, falling back to permutation importance: {shap_err}")
             try:
