@@ -1224,11 +1224,11 @@ async def explain_prediction(request: PredictionRequest):
                         predictions = model(x_tensor)
                         return predictions.cpu().numpy()
 
-            background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
-            if request.normalize:
-                background_data = partial_scale_features(background_data)
+                background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
+                if request.normalize:
+                    background_data = partial_scale_features(background_data)
 
-            explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
+                explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
             # Keep SHAP sample budget small to reduce memory/CPU
             raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=20)
 
