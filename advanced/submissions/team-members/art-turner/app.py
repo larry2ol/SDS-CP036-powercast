@@ -1278,35 +1278,38 @@ async def explain_prediction(request: PredictionRequest):
                 base_values=base_vals,
                 explanation_plots=explanation_plots
             )
-        # If SHAP is not available or failed, fall back
-        try:
+        except Exception as shap_err:
+            logger.error(f"SHAP computation failed, falling back to permutation importance: {shap_err}")
+            try:
+                # Fallback: local permutation importance (signed impact on total power)
+                with torch.no_grad():
+                    base_pred = model(torch.FloatTensor(features_array).unsqueeze(0))
+                    base_denorm = target_scaler.inverse_transform(base_pred.cpu().numpy()).flatten()
+                    base_total = float(base_denorm.sum())
 
-            # Fallback: local permutation importance (signed impact on total power)
-            with torch.no_grad():
-                base_pred = model(torch.FloatTensor(features_array).unsqueeze(0))
-                base_denorm = target_scaler.inverse_transform(base_pred.cpu().numpy()).flatten()
-                base_total = float(base_denorm.sum())
+                impacts = np.zeros(num_timesteps * num_feats, dtype=float)
+                col_medians = np.median(features_array, axis=0)
+                for t in range(num_timesteps):
+                    for f in range(num_feats):
+                        x_alt = features_array.copy()
+                        x_alt[t, f] = col_medians[f]
+                        with torch.no_grad():
+                            alt_pred = model(torch.FloatTensor(x_alt).unsqueeze(0))
+                            alt_denorm = target_scaler.inverse_transform(alt_pred.cpu().numpy()).flatten()
+                            alt_total = float(alt_denorm.sum())
+                        impacts[t * num_feats + f] = alt_total - base_total
 
-            impacts = np.zeros(num_timesteps * num_feats, dtype=float)
-            col_medians = np.median(features_array, axis=0)
-            for t in range(num_timesteps):
-                for f in range(num_feats):
-                    x_alt = features_array.copy()
-                    x_alt[t, f] = col_medians[f]
-                    with torch.no_grad():
-                        alt_pred = model(torch.FloatTensor(x_alt).unsqueeze(0))
-                        alt_denorm = target_scaler.inverse_transform(alt_pred.cpu().numpy()).flatten()
-                        alt_total = float(alt_denorm.sum())
-                    impacts[t * num_feats + f] = alt_total - base_total
+                explanation_plots = {"summary": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="}
 
-            explanation_plots = {"summary": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="}
-
-            return SHAPExplanation(
-                shap_values=impacts.tolist(),
-                feature_names=feature_names_flat,
-                base_values=[base_total],
-                explanation_plots=explanation_plots
-            )
+                return SHAPExplanation(
+                    shap_values=impacts.tolist(),
+                    feature_names=feature_names_flat,
+                    base_values=[base_total],
+                    explanation_plots=explanation_plots
+                )
+            except Exception as e:
+                logger.error(f"Permutation fallback failed: {e}")
+                raise
 
     except Exception as e:
         logger.error(f"SHAP explanation error: {str(e)}")
