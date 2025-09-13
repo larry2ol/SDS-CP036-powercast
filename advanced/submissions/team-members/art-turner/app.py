@@ -1190,16 +1190,20 @@ async def explain_prediction(request: PredictionRequest):
         raise HTTPException(status_code=503, detail="Model not loaded")
     
     # Lazy imports to reduce baseline memory
+    shap = None
+    plt = None
     try:
-        import shap
-    except ImportError:
-        raise HTTPException(status_code=503, detail="SHAP library not available. Please install shap>=0.46.0")
+        import shap as _shap
+        shap = _shap
+    except Exception:
+        shap = None  # SHAP not available; we'll fall back
     try:
         import matplotlib
         matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
-    except ImportError:
-        raise HTTPException(status_code=503, detail="Matplotlib not available for plot generation")
+        import matplotlib.pyplot as _plt
+        plt = _plt
+    except Exception:
+        plt = None  # Still proceed; fallback does not require plots
     
     try:
         # Process input
@@ -1211,13 +1215,14 @@ async def explain_prediction(request: PredictionRequest):
         base_names = metadata["base_feature_cols"]
         feature_names_flat = [f"{friendly_feature_name(name)}_{i}" for i in range(num_timesteps) for name in base_names]
 
-        # Try SHAP first in a single, well-formed try/except
-        try:
-            def model_predict(x):
-                with torch.no_grad():
-                    x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
-                    predictions = model(x_tensor)
-                    return predictions.cpu().numpy()
+        # Try SHAP first only if available; otherwise skip to fallback
+        if shap is not None and plt is not None:
+            try:
+                def model_predict(x):
+                    with torch.no_grad():
+                        x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
+                        predictions = model(x_tensor)
+                        return predictions.cpu().numpy()
 
             background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
             if request.normalize:
@@ -1273,9 +1278,8 @@ async def explain_prediction(request: PredictionRequest):
                 base_values=base_vals,
                 explanation_plots=explanation_plots
             )
-
-        except Exception as shap_err:
-            logger.error(f"SHAP computation failed, falling back to permutation importance: {shap_err}")
+        # If SHAP is not available or failed, fall back
+        try:
 
             # Fallback: local permutation importance (signed impact on total power)
             with torch.no_grad():
@@ -1424,7 +1428,7 @@ async def get_global_feature_importance():
     try:
         rng = np.random.default_rng(42)
         n_samples = 12
-        n_feats = len(metadata["base_feature_cols"])  # 11
+        n_feats = len(metadata["base_feature_cols"])  # could be 14 after checkpoint adjust
 
         # Accumulators
         scores = np.zeros(n_feats, dtype=float)
@@ -1438,7 +1442,7 @@ async def get_global_feature_importance():
             )
 
             # Normalize for model
-            x_norm = feature_scaler.transform(x_raw.reshape(-1, n_feats)).reshape(x_raw.shape)
+            x_norm = partial_scale_features(x_raw)
 
             # Baseline prediction (denormalized total)
             with torch.no_grad():
