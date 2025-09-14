@@ -11,13 +11,8 @@ numpy==1.26.4
 pandas==2.2.3
 scikit-learn==1.6.1
 
-# Model Explainability
-shap==0.46.0
-
 # Advanced Visualizations
 plotly==5.24.1
-seaborn==0.13.2
-matplotlib==3.9.2
 
 # Data processing
 scipy==1.14.1
