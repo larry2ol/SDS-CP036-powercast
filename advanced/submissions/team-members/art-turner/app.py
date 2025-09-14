@@ -562,6 +562,8 @@ def plot_to_base64(fig) -> str:
     buffer.seek(0)
     image_base64 = base64.b64encode(buffer.getvalue()).decode()
     buffer.close()
+    # Import matplotlib locally to avoid global import issues
+    import matplotlib.pyplot as plt
     plt.close(fig)
     return f"data:image/png;base64,{image_base64}"
 
@@ -1185,26 +1187,12 @@ async def generate_dummy_data():
 
 @app.post("/explain", response_model=SHAPExplanation)
 async def explain_prediction(request: PredictionRequest):
-    """Generate SHAP explanations for a prediction"""
+    """Generate SHAP explanations for a prediction with optimized resource usage"""
     if model is None or feature_scaler is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
-    # Lazy imports to reduce baseline memory
-    shap = None
-    plt = None
-    try:
-        import shap as _shap
-        shap = _shap
-    except Exception:
-        shap = None  # SHAP not available; we'll fall back
-    try:
-        import matplotlib
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as _plt
-        plt = _plt
-    except Exception:
-        plt = None  # Still proceed; fallback does not require plots
-    
+
+    logger.info("Starting SHAP explanation generation...")
+
     # Process input
     features_array = np.array(request.features)
     if request.normalize:
@@ -1214,100 +1202,133 @@ async def explain_prediction(request: PredictionRequest):
     base_names = metadata["base_feature_cols"]
     feature_names_flat = [f"{friendly_feature_name(name)}_{i}" for i in range(num_timesteps) for name in base_names]
 
-    # Try SHAP first; on any failure or if unavailable, fall back
-    shap_succeeded = False
-    if shap is not None and plt is not None:
-        try:
-            def model_predict(x):
-                with torch.no_grad():
-                    x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
-                    predictions = model(x_tensor)
-                    return predictions.cpu().numpy()
-
-            background_data = create_dummy_time_series(10, len(metadata["base_feature_cols"]), advance_time=False)
-            if request.normalize:
-                background_data = partial_scale_features(background_data)
-
-            explainer = shap.KernelExplainer(model_predict, background_data.reshape(10, -1))
-            raw_shap_values = explainer.shap_values(features_array.reshape(1, -1), nsamples=20)
-
-            shap_arr = np.array(raw_shap_values[0] if isinstance(raw_shap_values, list) else raw_shap_values)
-            if shap_arr.ndim == 1:
-                shap_arr = shap_arr.reshape(1, -1)
-
-            explanation_plots = {}
-            try:
-                plt.figure(figsize=(10, 6))
-                shap.summary_plot(shap_arr, features_array.reshape(1, -1),
-                                  feature_names=feature_names_flat[: shap_arr.shape[1]],
-                                  show=False, max_display=20)
-                explanation_plots["summary"] = plot_to_base64(plt.gcf())
-            except Exception as plot_error:
-                logger.error(f"SHAP plot creation failed: {str(plot_error)}")
-                explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-
-            import os as _os
-            if _os.getenv('ENABLE_BEESWARM', '0').lower() in ('1', 'true', 'yes'):
-                try:
-                    M = 8
-                    eval_data = np.tile(features_array.reshape(1, num_timesteps, num_feats), (M, 1, 1))
-                    noise = np.random.normal(0, 0.02, size=eval_data.shape)
-                    eval_data = eval_data + noise
-                    shap_eval = explainer.shap_values(eval_data.reshape(M, -1), nsamples=20)
-                    shap_eval_arr = np.array(shap_eval[0] if isinstance(shap_eval, list) else shap_eval)
-                    plt.figure(figsize=(10, 6))
-                    shap.summary_plot(shap_eval_arr, eval_data.reshape(M, -1),
-                                      feature_names=feature_names_flat[: shap_eval_arr.shape[1]],
-                                      show=False, max_display=20)
-                    explanation_plots["beeswarm"] = plot_to_base64(plt.gcf())
-                except Exception as bees_err:
-                    logger.error(f"SHAP beeswarm generation failed: {str(bees_err)}")
-
-            exp_val = explainer.expected_value
-            base_vals = (list(np.array(exp_val).flatten()[:1])
-                         if isinstance(exp_val, (list, tuple, np.ndarray))
-                         else [float(exp_val)])
-
-            shap_succeeded = True
-            return SHAPExplanation(
-                shap_values=shap_arr.flatten().tolist(),
-                feature_names=feature_names_flat[: shap_arr.size],
-                base_values=base_vals,
-                explanation_plots=explanation_plots
-            )
-        except Exception as shap_err:
-            logger.error(f"SHAP computation failed, falling back to permutation importance: {shap_err}")
-
-    # Fallback: local permutation importance (signed impact on total power)
+    # Try SHAP first with optimized settings
     try:
+        # Lazy imports to reduce memory footprint
+        import shap
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend
+        import matplotlib.pyplot as plt
+
+        logger.info("SHAP and matplotlib loaded successfully")
+
+        def model_predict(x):
+            """Optimized model prediction wrapper"""
+            with torch.no_grad():
+                x_tensor = torch.FloatTensor(x).reshape(-1, num_timesteps, num_feats)
+                predictions = model(x_tensor)
+                return predictions.cpu().numpy()
+
+        # Create smaller background dataset (reduced from 10 to 5 samples)
+        logger.info("Creating background data...")
+        background_data = create_dummy_time_series(5, len(metadata["base_feature_cols"]), advance_time=False)
+        if request.normalize:
+            background_data = partial_scale_features(background_data)
+
+        background_flat = background_data.reshape(5, -1)
+        logger.info(f"Background data shape: {background_flat.shape}")
+
+        # Create SHAP explainer with reduced samples
+        logger.info("Initializing SHAP KernelExplainer...")
+        explainer = shap.KernelExplainer(model_predict, background_flat)
+
+        # Generate SHAP values with fewer samples (reduced from 20 to 10)
+        logger.info("Computing SHAP values...")
+        input_flat = features_array.reshape(1, -1)
+        raw_shap_values = explainer.shap_values(input_flat, nsamples=10, l1_reg="aic")
+
+        shap_arr = np.array(raw_shap_values[0] if isinstance(raw_shap_values, list) else raw_shap_values)
+        if shap_arr.ndim == 1:
+            shap_arr = shap_arr.reshape(1, -1)
+
+        logger.info(f"SHAP values computed successfully, shape: {shap_arr.shape}")
+
+        # Create explanation plots with error handling
+        explanation_plots = {}
+        try:
+            logger.info("Creating SHAP summary plot...")
+            plt.figure(figsize=(8, 5))  # Reduced figure size
+            shap.summary_plot(shap_arr, input_flat,
+                              feature_names=feature_names_flat[:shap_arr.shape[1]],
+                              show=False, max_display=15)  # Reduced max_display
+            explanation_plots["summary"] = plot_to_base64(plt.gcf())
+            plt.close()  # Explicitly close to free memory
+            logger.info("SHAP summary plot created successfully")
+        except Exception as plot_error:
+            logger.error(f"SHAP plot creation failed: {str(plot_error)}")
+            explanation_plots["summary"] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+
+        # Skip beeswarm plot to reduce resource usage (it's optional and resource-intensive)
+        # The original code had this behind an environment flag anyway
+
+        # Get base values
+        exp_val = explainer.expected_value
+        base_vals = (list(np.array(exp_val).flatten()[:1])
+                     if isinstance(exp_val, (list, tuple, np.ndarray))
+                     else [float(exp_val)])
+
+        logger.info("SHAP explanation completed successfully")
+        return SHAPExplanation(
+            shap_values=shap_arr.flatten().tolist(),
+            feature_names=feature_names_flat[:shap_arr.size],
+            base_values=base_vals,
+            explanation_plots=explanation_plots
+        )
+
+    except ImportError as import_err:
+        logger.error(f"SHAP dependencies not available: {import_err}")
+        # Fall through to permutation fallback
+    except Exception as shap_err:
+        logger.error(f"SHAP computation failed: {shap_err}")
+        # Fall through to permutation fallback
+
+    # Fallback: fast permutation-based importance (more resource-efficient)
+    logger.info("Using permutation-based fallback method...")
+    try:
+        # Get baseline prediction
         with torch.no_grad():
             base_pred = model(torch.FloatTensor(features_array).unsqueeze(0))
             base_denorm = target_scaler.inverse_transform(base_pred.cpu().numpy()).flatten()
             base_total = float(base_denorm.sum())
 
-        impacts = np.zeros(num_timesteps * num_feats, dtype=float)
+        # Compute feature-level impacts (faster than timestep-level)
+        feature_impacts = np.zeros(num_feats, dtype=float)
         col_medians = np.median(features_array, axis=0)
-        for t in range(num_timesteps):
-            for f in range(num_feats):
-                x_alt = features_array.copy()
-                x_alt[t, f] = col_medians[f]
-                with torch.no_grad():
-                    alt_pred = model(torch.FloatTensor(x_alt).unsqueeze(0))
-                    alt_denorm = target_scaler.inverse_transform(alt_pred.cpu().numpy()).flatten()
-                    alt_total = float(alt_denorm.sum())
-                impacts[t * num_feats + f] = alt_total - base_total
 
-        explanation_plots = {"summary": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="}
+        for f in range(num_feats):
+            x_alt = features_array.copy()
+            x_alt[:, f] = col_medians[f]  # Replace entire column with median
+            with torch.no_grad():
+                alt_pred = model(torch.FloatTensor(x_alt).unsqueeze(0))
+                alt_denorm = target_scaler.inverse_transform(alt_pred.cpu().numpy()).flatten()
+                alt_total = float(alt_denorm.sum())
+            feature_impacts[f] = abs(alt_total - base_total)  # Use absolute impact
 
+        # Expand to match expected flattened format
+        impacts_expanded = np.repeat(feature_impacts, num_timesteps)
+
+        # Create simplified feature names (feature-level, not timestep-level)
+        feature_names_simplified = [friendly_feature_name(name) for name in base_names]
+        feature_names_expanded = []
+        for i in range(num_timesteps):
+            for name in feature_names_simplified:
+                feature_names_expanded.append(f"{name}_t{i}")
+
+        explanation_plots = {
+            "summary": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        }
+
+        logger.info("Permutation-based explanation completed successfully")
         return SHAPExplanation(
-            shap_values=impacts.tolist(),
-            feature_names=feature_names_flat,
+            shap_values=impacts_expanded.tolist(),
+            feature_names=feature_names_expanded,
             base_values=[base_total],
             explanation_plots=explanation_plots
         )
+
     except Exception as e:
-        logger.error(f"Permutation fallback failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
+        logger.error(f"All explanation methods failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Explanation generation failed: {str(e)}")
 
 @app.post("/analyze-features", response_model=FeatureAnalysis)
 async def analyze_features(request: PredictionRequest):
@@ -1416,7 +1437,7 @@ async def visualize_input(request: PredictionRequest):
 
 @app.get("/feature-importance")
 async def get_global_feature_importance():
-    """Model-based permutation importance over multiple dummy samples.
+    """Optimized model-based permutation importance over multiple dummy samples.
 
     For each sample, permute each base feature across timesteps and measure
     the absolute change in total predicted power (sum of zones).
@@ -1424,16 +1445,23 @@ async def get_global_feature_importance():
     if model is None or feature_scaler is None or target_scaler is None:
         raise HTTPException(status_code=503, detail="Model components not loaded")
 
+    logger.info("Starting feature importance calculation...")
+
     try:
         import os as _os
         rng = np.random.default_rng(42)
-        n_samples = int(_os.getenv('FI_SAMPLES', '6'))
-        n_feats = len(metadata["base_feature_cols"])  # could be 14 after checkpoint adjust
+        # Reduced default samples from 6 to 3 for better performance
+        n_samples = int(_os.getenv('FI_SAMPLES', '3'))
+        n_feats = len(metadata["base_feature_cols"])
+
+        logger.info(f"Computing importance with {n_samples} samples, {n_feats} features")
 
         # Accumulators
         scores = np.zeros(n_feats, dtype=float)
 
-        for _ in range(n_samples):
+        for sample_idx in range(n_samples):
+            logger.info(f"Processing sample {sample_idx + 1}/{n_samples}")
+
             # Generate one sample (raw)
             x_raw = create_dummy_time_series(
                 n_timesteps=metadata["lookback_window"],
@@ -1469,6 +1497,7 @@ async def get_global_feature_importance():
             metadata["base_feature_cols"][i]: float(scores[i]) for i in range(n_feats)
         }
 
+        logger.info("Feature importance calculation completed successfully")
         return {
             "feature_importance": final_importance,
             "method": "permutation-based (temporal)",
