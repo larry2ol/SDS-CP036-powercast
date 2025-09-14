@@ -712,6 +712,27 @@ async def read_root():
                 <div id="model-info">Loading model info...</div>
                 <button class="button" onclick="loadModelInfo()">Refresh Model Info</button>
             </div>
+
+            <div class="card">
+                <h2>🎯 Zone Load Levels</h2>
+                <div id="zone-gauges" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 15px 0;">
+                    <div class="gauge-container" style="text-align: center;">
+                        <canvas id="zone1-gauge" width="100" height="100"></canvas>
+                        <div style="font-weight: bold; margin-top: 5px; color: #4CAF50;">Zone 1</div>
+                        <div id="zone1-status" style="font-size: 0.85em; color: #666;">No data</div>
+                    </div>
+                    <div class="gauge-container" style="text-align: center;">
+                        <canvas id="zone2-gauge" width="100" height="100"></canvas>
+                        <div style="font-weight: bold; margin-top: 5px; color: #2196F3;">Zone 2</div>
+                        <div id="zone2-status" style="font-size: 0.85em; color: #666;">No data</div>
+                    </div>
+                    <div class="gauge-container" style="text-align: center;">
+                        <canvas id="zone3-gauge" width="100" height="100"></canvas>
+                        <div style="font-weight: bold; margin-top: 5px; color: #FF9800;">Zone 3</div>
+                        <div id="zone3-status" style="font-size: 0.85em; color: #666;">No data</div>
+                    </div>
+                </div>
+            </div>
             
             <div class="card">
                 <h2>💾 Quick Prediction</h2>
@@ -733,11 +754,17 @@ async def read_root():
             <div class="card full-width">
                 <h2>📈 Custom Prediction</h2>
                 <p>Enter your own feature values (36 timesteps x 11 features):</p>
-                <textarea id="custom-features" placeholder="Enter JSON array of features..." 
+                <textarea id="custom-features" placeholder="Enter JSON array of features..."
                     style="width: 100%; height: 100px; margin: 10px 0;"></textarea>
                 <br>
                 <button class="button" onclick="customPredict()">Predict Custom Data</button>
-                <button class="button" onclick="loadDummyData()">Load Dummy Data</button>
+                <button class="button" onclick="loadDummyData()">Load Sample Data</button>
+                <br><br>
+                <strong>📋 Quick Scenarios:</strong><br>
+                <button class="button" onclick="loadScenario('summer_day')" style="background: #ff6b35; font-size: 0.9em;">☀️ Summer Day</button>
+                <button class="button" onclick="loadScenario('winter_night')" style="background: #4a90a4; font-size: 0.9em;">❄️ Winter Night</button>
+                <button class="button" onclick="loadScenario('stormy_weather')" style="background: #6c757d; font-size: 0.9em;">⛈️ Stormy Weather</button>
+                <button class="button" onclick="loadScenario('mild_spring')" style="background: #28a745; font-size: 0.9em;">🌸 Mild Spring</button>
                 <div id="custom-result"></div>
             </div>
             
@@ -754,6 +781,87 @@ async def read_root():
 
         <script>
             let predictionHistory = [];
+
+            // Zone gauge configuration
+            const zoneGauges = {
+                zone1: { canvas: null, max: 20000 },
+                zone2: { canvas: null, max: 20000 },
+                zone3: { canvas: null, max: 20000 }
+            };
+
+            // Gauge chart functions
+            function initializeGauges() {
+                zoneGauges.zone1.canvas = document.getElementById('zone1-gauge');
+                zoneGauges.zone2.canvas = document.getElementById('zone2-gauge');
+                zoneGauges.zone3.canvas = document.getElementById('zone3-gauge');
+
+                drawGauge('zone1', 0);
+                drawGauge('zone2', 0);
+                drawGauge('zone3', 0);
+            }
+
+            function drawGauge(zoneKey, value) {
+                const gauge = zoneGauges[zoneKey];
+                const canvas = gauge.canvas;
+                if (!canvas) return;
+
+                const ctx = canvas.getContext('2d');
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = 35;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const percentage = Math.min(value / gauge.max, 1);
+                const angle = Math.PI * percentage;
+
+                // Background arc
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, Math.PI, 2 * Math.PI);
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.stroke();
+
+                // Value arc
+                if (percentage > 0) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, Math.PI, Math.PI + angle);
+                    ctx.lineWidth = 10;
+
+                    if (percentage < 0.6) ctx.strokeStyle = '#28a745';
+                    else if (percentage < 0.8) ctx.strokeStyle = '#ffc107';
+                    else ctx.strokeStyle = '#dc3545';
+                    ctx.stroke();
+                }
+
+                // Center text
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(Math.round(value).toLocaleString(), centerX, centerY - 3);
+                ctx.font = '9px Arial';
+                ctx.fillText('kW', centerX, centerY + 8);
+
+                // Update status
+                let status = 'Normal';
+                let statusColor = '#28a745';
+                if (percentage >= 0.8) { status = 'Critical'; statusColor = '#dc3545'; }
+                else if (percentage >= 0.6) { status = 'High'; statusColor = '#ffc107'; }
+
+                const statusEl = document.getElementById(zoneKey + '-status');
+                if (statusEl) {
+                    statusEl.textContent = Math.round(percentage * 100) + '% • ' + status;
+                    statusEl.style.color = statusColor;
+                }
+            }
+
+            function updateAllGauges(predictions) {
+                if (predictions && predictions.zone_predictions) {
+                    drawGauge('zone1', predictions.zone_predictions['Zone 1'] || 0);
+                    drawGauge('zone2', predictions.zone_predictions['Zone 2'] || 0);
+                    drawGauge('zone3', predictions.zone_predictions['Zone 3'] || 0);
+                }
+            }
             
             async function loadModelInfo() {
                 const infoDiv = document.getElementById('model-info');
@@ -860,25 +968,127 @@ async def read_root():
                 inputDisplay.style.display = 'block';
             }
             
-            function loadDummyData() {
-                // Create a sample 36x11 array
-                const dummyData = [];
-                for (let i = 0; i < 36; i++) {
-                    dummyData.push([
-                        20 + Math.random() * 10,  // Temperature
-                        60 + Math.random() * 20,  // Humidity  
-                        Math.random() * 10,       // Wind Speed
-                        300 + Math.random() * 400, // General diffuse
-                        200 + Math.random() * 300, // Diffuse
-                        Math.sin(i * 0.26),       // hour_sin
-                        Math.cos(i * 0.26),       // hour_cos
-                        Math.sin(i * 0.04),       // dow_sin
-                        Math.cos(i * 0.04),       // dow_cos
-                        Math.sin(i * 0.005),      // month_sin
-                        Math.cos(i * 0.005)       // month_cos
-                    ]);
+            // Scenario templates
+            const scenarios = {
+                'summer_day': {
+                    name: 'Summer Day (Hot & Sunny)',
+                    description: 'High solar, high temperatures, low humidity',
+                    generator: () => {
+                        const data = [];
+                        for (let i = 0; i < 36; i++) {
+                            const hour = (6 + i) % 24; // Start at 6 AM, cycle through hours
+                            data.push([
+                                28 + Math.random() * 8,     // Temperature: 28-36°C
+                                45 + Math.random() * 20,    // Humidity: 45-65%
+                                2 + Math.random() * 4,      // Wind Speed: 2-6 m/s
+                                hour > 6 && hour < 19 ? 700 + Math.random() * 300 : Math.random() * 50, // High solar during day
+                                hour > 6 && hour < 19 ? 400 + Math.random() * 200 : Math.random() * 20, // High diffuse during day
+                                Math.sin(hour * Math.PI / 12),     // hour_sin
+                                Math.cos(hour * Math.PI / 12),     // hour_cos
+                                Math.sin(2 * Math.PI / 7),         // dow_sin (Tuesday)
+                                Math.cos(2 * Math.PI / 7),         // dow_cos
+                                Math.sin(6 * Math.PI / 12),        // month_sin (July)
+                                Math.cos(6 * Math.PI / 12)         // month_cos
+                            ]);
+                        }
+                        return data;
+                    }
+                },
+                'winter_night': {
+                    name: 'Winter Night (Cold & Clear)',
+                    description: 'Low temperatures, no solar, moderate humidity',
+                    generator: () => {
+                        const data = [];
+                        for (let i = 0; i < 36; i++) {
+                            const hour = (20 + i) % 24; // Start at 8 PM
+                            data.push([
+                                12 + Math.random() * 6,     // Temperature: 12-18°C
+                                70 + Math.random() * 15,    // Humidity: 70-85%
+                                1 + Math.random() * 3,      // Wind Speed: 1-4 m/s
+                                hour > 7 && hour < 18 ? 200 + Math.random() * 300 : Math.random() * 10, // Low solar, some during day
+                                hour > 7 && hour < 18 ? 150 + Math.random() * 150 : Math.random() * 5,  // Low diffuse
+                                Math.sin(hour * Math.PI / 12),     // hour_sin
+                                Math.cos(hour * Math.PI / 12),     // hour_cos
+                                Math.sin(5 * Math.PI / 7),         // dow_sin (Friday)
+                                Math.cos(5 * Math.PI / 7),         // dow_cos
+                                Math.sin(0 * Math.PI / 12),        // month_sin (January)
+                                Math.cos(0 * Math.PI / 12)         // month_cos
+                            ]);
+                        }
+                        return data;
+                    }
+                },
+                'stormy_weather': {
+                    name: 'Stormy Weather (Windy & Overcast)',
+                    description: 'High winds, low solar, variable temperature',
+                    generator: () => {
+                        const data = [];
+                        for (let i = 0; i < 36; i++) {
+                            const hour = (10 + i) % 24; // Start at 10 AM
+                            data.push([
+                                18 + Math.random() * 10,    // Temperature: 18-28°C (variable)
+                                75 + Math.random() * 20,    // Humidity: 75-95%
+                                8 + Math.random() * 10,     // Wind Speed: 8-18 m/s (high winds)
+                                hour > 7 && hour < 17 ? 100 + Math.random() * 200 : Math.random() * 20, // Very low solar (overcast)
+                                hour > 7 && hour < 17 ? 80 + Math.random() * 120 : Math.random() * 10,  // Low diffuse
+                                Math.sin(hour * Math.PI / 12),     // hour_sin
+                                Math.cos(hour * Math.PI / 12),     // hour_cos
+                                Math.sin(3 * Math.PI / 7),         // dow_sin (Wednesday)
+                                Math.cos(3 * Math.PI / 7),         // dow_cos
+                                Math.sin(3 * Math.PI / 12),        // month_sin (April - spring storms)
+                                Math.cos(3 * Math.PI / 12)         // month_cos
+                            ]);
+                        }
+                        return data;
+                    }
+                },
+                'mild_spring': {
+                    name: 'Mild Spring Day',
+                    description: 'Pleasant temperatures, moderate conditions',
+                    generator: () => {
+                        const data = [];
+                        for (let i = 0; i < 36; i++) {
+                            const hour = (8 + i) % 24; // Start at 8 AM
+                            data.push([
+                                22 + Math.random() * 6,     // Temperature: 22-28°C
+                                55 + Math.random() * 25,    // Humidity: 55-80%
+                                3 + Math.random() * 5,      // Wind Speed: 3-8 m/s
+                                hour > 6 && hour < 19 ? 500 + Math.random() * 300 : Math.random() * 30, // Moderate solar
+                                hour > 6 && hour < 19 ? 300 + Math.random() * 200 : Math.random() * 15, // Moderate diffuse
+                                Math.sin(hour * Math.PI / 12),     // hour_sin
+                                Math.cos(hour * Math.PI / 12),     // hour_cos
+                                Math.sin(1 * Math.PI / 7),         // dow_sin (Monday)
+                                Math.cos(1 * Math.PI / 7),         // dow_cos
+                                Math.sin(3 * Math.PI / 12),        // month_sin (April)
+                                Math.cos(3 * Math.PI / 12)         // month_cos
+                            ]);
+                        }
+                        return data;
+                    }
                 }
-                document.getElementById('custom-features').value = JSON.stringify(dummyData, null, 2);
+            };
+
+            function loadScenario(scenarioKey) {
+                const scenario = scenarios[scenarioKey];
+                if (scenario) {
+                    const data = scenario.generator();
+                    document.getElementById('custom-features').value = JSON.stringify(data, null, 2);
+
+                    // Update result div with scenario info
+                    const resultDiv = document.getElementById('custom-result');
+                    resultDiv.innerHTML = `
+                        <div class="result" style="background: #e3f2fd; border-left-color: #2196F3;">
+                            📋 <strong>Scenario Loaded: ${scenario.name}</strong><br>
+                            <small>${scenario.description}</small><br>
+                            <small>Ready for prediction - click "Predict Custom Data"</small>
+                        </div>
+                    `;
+                }
+            }
+
+            function loadDummyData() {
+                // Load the mild spring scenario as default
+                loadScenario('mild_spring');
             }
             
             async function customPredict() {
@@ -925,11 +1135,14 @@ async def read_root():
                     ...prediction,
                     id: Date.now()
                 });
-                
+
                 if (predictionHistory.length > 10) {
                     predictionHistory = predictionHistory.slice(0, 10);
                 }
-                
+
+                // Update gauges
+                updateAllGauges(prediction);
+
                 updateHistoryDisplay();
             }
             
@@ -980,6 +1193,9 @@ async def read_root():
             
             // Load model info on page load
             loadModelInfo();
+
+            // Initialize gauges
+            initializeGauges();
         </script>
     </body>
     </html>
