@@ -282,7 +282,7 @@
                 </div>
                 <div class="control-group">
                     <div id="dash-sim-status" style="text-align: center; margin-right: 20px;">
-                        <div id="dash-sim-datetime" style="font-weight: bold; color: #667eea;">Loading simulation...</div>
+                        <div id="dash-sim-datetime" style="font-weight: bold; color: #667eea;">Simulation Ready</div>
                         <div id="dash-sim-season" style="font-size: 0.9em; color: #666;"></div>
                     </div>
                 </div>
@@ -829,14 +829,6 @@
             predictionChart.update();
         }
         
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeCharts();
-            loadModelInfo();
-        });
-    </script>
-</body>
-</html>
         // Load simulation status for header
         async function loadDashSimulationStatus() {
             try {
@@ -845,11 +837,17 @@
                 document.getElementById('dash-sim-datetime').textContent = data.current_formatted;
                 document.getElementById('dash-sim-season').textContent = `${data.season} • Next prediction at ${data.next_prediction_time}`;
             } catch (e) {
-                document.getElementById('dash-sim-datetime').textContent = 'Simulation Status Error';
+                console.error('Failed to load simulation status:', e);
+                document.getElementById('dash-sim-datetime').textContent = 'Simulation Ready';
             }
         }
 
-        // On load
-        document.addEventListener('DOMContentLoaded', () => {
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadModelInfo();
             loadDashSimulationStatus();
         });
+    </script>
+</body>
+</html>
