@@ -1185,7 +1185,7 @@
                     hour: '2-digit', minute: '2-digit', hour12: false
                 });
                 return `
-                    <div class="result" style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #4CAF50; box-shadow: none;">
+                    <div class="result" style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #4CAF50; box-shadow: none; text-align: left; width: 100%; box-sizing: border-box;">
                         <strong>📅 ${timestamp} (Tetouan Climate)</strong>
                         ${pred.model_info?.api_call_time ? `<br><small style="color: #666;">API called at: ${pred.model_info.api_call_time}</small>` : ''}
                         <br>Zone 1: ${pred.zone_predictions['Zone 1'].toFixed(2)} kW |
