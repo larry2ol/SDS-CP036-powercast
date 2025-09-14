@@ -347,16 +347,37 @@ def create_dummy_time_series(n_timesteps: int = 36, n_features: int = 11, advanc
         # If model expects autoregressive power features (total 14 features),
         # synthesize plausible values from environmental signals.
         if n_features >= 14:
-            # Proxy total consumption based on temp and solar (rough heuristic)
-            # Higher when hot (cooling) and when solar is low (grid demand)
+            # Generate autoregressive power values in realistic range (based on target scaler data)
+            # Zone 1: 13-52k range, Zone 2: 8-37k range, Zone 3: 8-47k range
+
+            # Base demands with realistic scale
+            base_z1 = 32000  # ~middle of Zone 1 range
+            base_z2 = 22000  # ~middle of Zone 2 range
+            base_z3 = 27000  # ~middle of Zone 3 range
+
+            # Adjust based on temperature (heating/cooling demand)
+            temp_factor = 1.0 + 0.3 * max(0, abs(temp - 22) / 15)  # More demand when very hot/cold
+
+            # Adjust based on solar (less grid demand when solar is high)
             solar = general_diffuse + 0.5 * diffuse
-            demand_base = 1200 + 12 * max(temp - 18, 0) + 6 * max(16 - temp, 0)
-            demand_solar_adj = -0.3 * (solar / 1000.0) * 800  # reduce when solar high
-            total_kw = demand_base + demand_solar_adj + np.random.normal(0, 40)
-            # Split into three zones
-            z1 = max(0.0, 0.45 * total_kw + np.random.normal(0, 20))
-            z2 = max(0.0, 0.33 * total_kw + np.random.normal(0, 15))
-            z3 = max(0.0, 0.22 * total_kw + np.random.normal(0, 10))
+            solar_factor = 1.0 - 0.15 * min(1.0, solar / 800)  # Reduce demand up to 15% with high solar
+
+            # Time of day factor (higher demand during day)
+            if 6 <= hour_of_day <= 22:
+                time_factor = 1.1  # 10% higher during day
+            else:
+                time_factor = 0.9  # 10% lower at night
+
+            # Generate zone consumptions with variation
+            z1 = base_z1 * temp_factor * solar_factor * time_factor + np.random.normal(0, 3000)
+            z2 = base_z2 * temp_factor * solar_factor * time_factor + np.random.normal(0, 2000)
+            z3 = base_z3 * temp_factor * solar_factor * time_factor + np.random.normal(0, 2500)
+
+            # Ensure reasonable bounds
+            z1 = np.clip(z1, 15000, 50000)
+            z2 = np.clip(z2, 10000, 35000)
+            z3 = np.clip(z3, 12000, 45000)
+
             timestep_features.extend([z1, z2, z3])
 
         features.append(timestep_features)
@@ -1314,13 +1335,19 @@ async def predict(request: PredictionRequest):
         # Debug: Check denormalized values
         logger.info(f"Denormalized prediction: {prediction_denorm}")
 
-        # Clamp predictions to reasonable ranges (13-52 MW based on scaler training data)
-        prediction_clamped = np.clip(prediction_denorm,
-                                   [13000, 8000, 8000],    # min values (slightly below scaler mins)
-                                   [55000, 40000, 50000])  # max values (slightly above scaler maxs)
+        # Check if predictions are reasonable (don't clamp, just log for now)
+        if np.any(prediction_denorm > 100000) or np.any(prediction_denorm < 0):
+            logger.warning(f"Unusual prediction values detected: {prediction_denorm}")
+            # Instead of hard clamping, let's scale down if too high
+            if np.any(prediction_denorm > 100000):
+                logger.warning("Scaling down excessive predictions")
+                prediction_denorm = prediction_denorm * 0.3  # Scale down by factor of ~3
+                logger.info(f"Scaled prediction: {prediction_denorm}")
 
-        logger.info(f"Clamped prediction: {prediction_clamped}")
-        prediction_denorm = prediction_clamped
+        # Final safety bounds (much more generous)
+        prediction_denorm = np.clip(prediction_denorm,
+                                  [5000, 3000, 3000],      # Lower bounds
+                                  [80000, 60000, 70000])   # Higher upper bounds
         
         # Create response
         zone_predictions = {
