@@ -1173,28 +1173,28 @@
         
         function updateHistoryDisplay() {
             const historyDiv = document.getElementById('prediction-history');
-            
+
             if (predictionHistory.length === 0) {
                 historyDiv.innerHTML = '<div class="loading">No predictions yet.</div>';
                 return;
             }
-            
+
             const historyHTML = predictionHistory.slice(0, 10).map(pred => {
                 const timestamp = new Date(pred.timestamp).toLocaleString('en-US', {
                     year: 'numeric', month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit', hour12: false
                 });
                 return `
-                    <div class="result" style="margin: 10px 0;">
+                    <div class="result" style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #4CAF50; box-shadow: none;">
                         <strong>📅 ${timestamp} (Tetouan Climate)</strong>
-                        ${pred.model_info?.api_call_time ? `<br><small style=\"color: #666;\">API called at: ${pred.model_info.api_call_time}</small>` : ''}
-                        <br>Zone 1: ${pred.zone_predictions['Zone 1'].toFixed(2)} kW | 
-                        Zone 2: ${pred.zone_predictions['Zone 2'].toFixed(2)} kW | 
+                        ${pred.model_info?.api_call_time ? `<br><small style="color: #666;">API called at: ${pred.model_info.api_call_time}</small>` : ''}
+                        <br>Zone 1: ${pred.zone_predictions['Zone 1'].toFixed(2)} kW |
+                        Zone 2: ${pred.zone_predictions['Zone 2'].toFixed(2)} kW |
                         Zone 3: ${pred.zone_predictions['Zone 3'].toFixed(2)} kW
                     </div>
                 `;
             }).join('');
-            
+
             historyDiv.innerHTML = historyHTML;
         }
         
