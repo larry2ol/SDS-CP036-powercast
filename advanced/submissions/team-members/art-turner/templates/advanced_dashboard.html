@@ -610,7 +610,7 @@
             <div class="grid">
                 <div class="card">
                     <h2><span class="icon">🎯</span>Custom Prediction</h2>
-                    <textarea id="custom-features" placeholder="Enter JSON array of features (36x11)..." 
+                    <textarea id="custom-features" placeholder="Enter JSON array of features (36x14 with autoregressive zone consumptions)..."
                         style="width: 100%; height: 150px; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-family: monospace;"></textarea>
                     <div style="margin: 15px 0;">
                         <button class="btn" onclick="customPredictWithAnalysis()">🎯 Predict & Analyze</button>
@@ -700,11 +700,11 @@
         let predictionChart = null;
         let currentInputData = null;
 
-        // Zone gauge configuration
+        // Zone gauge configuration (based on training data ranges)
         const zoneGauges = {
-            zone1: { canvas: null, color: '#667eea', max: 20000 },
-            zone2: { canvas: null, color: '#764ba2', max: 20000 },
-            zone3: { canvas: null, color: '#36d1dc', max: 20000 }
+            zone1: { canvas: null, color: '#667eea', max: 55000 },  // Zone 1: 13-52k range
+            zone2: { canvas: null, color: '#764ba2', max: 40000 },  // Zone 2: 8-37k range
+            zone3: { canvas: null, color: '#36d1dc', max: 50000 }   // Zone 3: 8-47k range
         };
         
         // Gauge chart functions
@@ -1354,7 +1354,10 @@
                             Math.sin(2 * Math.PI / 7),         // dow_sin (Tuesday)
                             Math.cos(2 * Math.PI / 7),         // dow_cos
                             Math.sin(6 * Math.PI / 12),        // month_sin (July)
-                            Math.cos(6 * Math.PI / 12)         // month_cos
+                            Math.cos(6 * Math.PI / 12),        // month_cos
+                            35000 + Math.random() * 10000,     // Zone 1 Power Consumption (autoregressive)
+                            25000 + Math.random() * 8000,      // Zone 2 Power Consumption (autoregressive)
+                            30000 + Math.random() * 12000      // Zone 3 Power Consumption (autoregressive)
                         ]);
                     }
                     return data;
@@ -1378,7 +1381,10 @@
                             Math.sin(5 * Math.PI / 7),         // dow_sin (Friday)
                             Math.cos(5 * Math.PI / 7),         // dow_cos
                             Math.sin(0 * Math.PI / 12),        // month_sin (January)
-                            Math.cos(0 * Math.PI / 12)         // month_cos
+                            Math.cos(0 * Math.PI / 12),        // month_cos
+                            40000 + Math.random() * 8000,      // Zone 1 Power Consumption (higher in winter)
+                            28000 + Math.random() * 6000,      // Zone 2 Power Consumption
+                            35000 + Math.random() * 10000      // Zone 3 Power Consumption
                         ]);
                     }
                     return data;
@@ -1402,7 +1408,10 @@
                             Math.sin(3 * Math.PI / 7),         // dow_sin (Wednesday)
                             Math.cos(3 * Math.PI / 7),         // dow_cos
                             Math.sin(3 * Math.PI / 12),        // month_sin (April)
-                            Math.cos(3 * Math.PI / 12)         // month_cos
+                            Math.cos(3 * Math.PI / 12),        // month_cos
+                            32000 + Math.random() * 12000,     // Zone 1 Power Consumption (variable due to storms)
+                            22000 + Math.random() * 10000,     // Zone 2 Power Consumption
+                            28000 + Math.random() * 14000      // Zone 3 Power Consumption
                         ]);
                     }
                     return data;
@@ -1426,7 +1435,10 @@
                             Math.sin(1 * Math.PI / 7),         // dow_sin (Monday)
                             Math.cos(1 * Math.PI / 7),         // dow_cos
                             Math.sin(3 * Math.PI / 12),        // month_sin (April)
-                            Math.cos(3 * Math.PI / 12)         // month_cos
+                            Math.cos(3 * Math.PI / 12),        // month_cos
+                            30000 + Math.random() * 8000,      // Zone 1 Power Consumption (mild conditions)
+                            20000 + Math.random() * 6000,      // Zone 2 Power Consumption
+                            25000 + Math.random() * 8000       // Zone 3 Power Consumption
                         ]);
                     }
                     return data;
@@ -1471,10 +1483,11 @@
                 const features = JSON.parse(featuresText);
                 const shape = [features.length, features[0].length];
                 
-                if (shape[0] === 36 && shape[1] === 11) {
+                if (shape[0] === 36 && shape[1] === 14) {
                     resultDiv.innerHTML = `
                         <div class="result">
                             ✅ Valid input shape: ${shape[0]} × ${shape[1]}<br>
+                            Includes 11 environmental features + 3 autoregressive zone consumptions<br>
                             Ready for prediction!
                         </div>
                     `;
@@ -1482,7 +1495,7 @@
                     resultDiv.innerHTML = `
                         <div class="result error">
                             ❌ Invalid shape: ${shape[0]} × ${shape[1]}<br>
-                            Expected: 36 × 11
+                            Expected: 36 × 14 (11 environmental + 3 autoregressive zone features)
                         </div>
                     `;
                 }

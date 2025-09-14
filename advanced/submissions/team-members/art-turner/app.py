@@ -753,7 +753,7 @@ async def read_root():
             
             <div class="card full-width">
                 <h2>📈 Custom Prediction</h2>
-                <p>Enter your own feature values (36 timesteps x 11 features):</p>
+                <p>Enter your own feature values (36 timesteps x 14 features including autoregressive zone consumptions):</p>
                 <textarea id="custom-features" placeholder="Enter JSON array of features..."
                     style="width: 100%; height: 100px; margin: 10px 0;"></textarea>
                 <br>
@@ -782,11 +782,11 @@ async def read_root():
         <script>
             let predictionHistory = [];
 
-            // Zone gauge configuration
+            // Zone gauge configuration (based on training data ranges)
             const zoneGauges = {
-                zone1: { canvas: null, max: 20000 },
-                zone2: { canvas: null, max: 20000 },
-                zone3: { canvas: null, max: 20000 }
+                zone1: { canvas: null, max: 55000 },  // Zone 1: 13-52k range
+                zone2: { canvas: null, max: 40000 },  // Zone 2: 8-37k range
+                zone3: { canvas: null, max: 50000 }   // Zone 3: 8-47k range
             };
 
             // Gauge chart functions
@@ -988,7 +988,10 @@ async def read_root():
                                 Math.sin(2 * Math.PI / 7),         // dow_sin (Tuesday)
                                 Math.cos(2 * Math.PI / 7),         // dow_cos
                                 Math.sin(6 * Math.PI / 12),        // month_sin (July)
-                                Math.cos(6 * Math.PI / 12)         // month_cos
+                                Math.cos(6 * Math.PI / 12),        // month_cos
+                                35000 + Math.random() * 10000,     // Zone 1 Power Consumption (autoregressive)
+                                25000 + Math.random() * 8000,      // Zone 2 Power Consumption (autoregressive)
+                                30000 + Math.random() * 12000      // Zone 3 Power Consumption (autoregressive)
                             ]);
                         }
                         return data;
@@ -1012,7 +1015,10 @@ async def read_root():
                                 Math.sin(5 * Math.PI / 7),         // dow_sin (Friday)
                                 Math.cos(5 * Math.PI / 7),         // dow_cos
                                 Math.sin(0 * Math.PI / 12),        // month_sin (January)
-                                Math.cos(0 * Math.PI / 12)         // month_cos
+                                Math.cos(0 * Math.PI / 12),        // month_cos
+                                40000 + Math.random() * 8000,      // Zone 1 Power Consumption (higher in winter)
+                                28000 + Math.random() * 6000,      // Zone 2 Power Consumption
+                                35000 + Math.random() * 10000      // Zone 3 Power Consumption
                             ]);
                         }
                         return data;
@@ -1036,7 +1042,10 @@ async def read_root():
                                 Math.sin(3 * Math.PI / 7),         // dow_sin (Wednesday)
                                 Math.cos(3 * Math.PI / 7),         // dow_cos
                                 Math.sin(3 * Math.PI / 12),        // month_sin (April - spring storms)
-                                Math.cos(3 * Math.PI / 12)         // month_cos
+                                Math.cos(3 * Math.PI / 12),        // month_cos
+                                32000 + Math.random() * 12000,     // Zone 1 Power Consumption (variable due to storms)
+                                22000 + Math.random() * 10000,     // Zone 2 Power Consumption
+                                28000 + Math.random() * 14000      // Zone 3 Power Consumption
                             ]);
                         }
                         return data;
@@ -1060,7 +1069,10 @@ async def read_root():
                                 Math.sin(1 * Math.PI / 7),         // dow_sin (Monday)
                                 Math.cos(1 * Math.PI / 7),         // dow_cos
                                 Math.sin(3 * Math.PI / 12),        // month_sin (April)
-                                Math.cos(3 * Math.PI / 12)         // month_cos
+                                Math.cos(3 * Math.PI / 12),        // month_cos
+                                30000 + Math.random() * 8000,      // Zone 1 Power Consumption (mild conditions)
+                                20000 + Math.random() * 6000,      // Zone 2 Power Consumption
+                                25000 + Math.random() * 8000       // Zone 3 Power Consumption
                             ]);
                         }
                         return data;
@@ -1292,9 +1304,23 @@ async def predict(request: PredictionRequest):
         
         # Convert to numpy and denormalize
         prediction_np = prediction.cpu().numpy()[0]  # (3,)
-        
+
+        # Debug: Check raw prediction values
+        logger.info(f"Raw model prediction (normalized): {prediction_np}")
+
         # Denormalize predictions
         prediction_denorm = target_scaler.inverse_transform(prediction_np.reshape(1, -1))[0]
+
+        # Debug: Check denormalized values
+        logger.info(f"Denormalized prediction: {prediction_denorm}")
+
+        # Clamp predictions to reasonable ranges (13-52 MW based on scaler training data)
+        prediction_clamped = np.clip(prediction_denorm,
+                                   [13000, 8000, 8000],    # min values (slightly below scaler mins)
+                                   [55000, 40000, 50000])  # max values (slightly above scaler maxs)
+
+        logger.info(f"Clamped prediction: {prediction_clamped}")
+        prediction_denorm = prediction_clamped
         
         # Create response
         zone_predictions = {
