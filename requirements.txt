@@ -1,0 +1,22 @@
+# Core Libraries
+numpy
+pandas
+
+# Visualization
+matplotlib
+seaborn
+plotly
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+
+# Experiment Tracking
+mlflow
+
+# Deployment
+streamlit
+
+# Utilities
+python-dotenv
