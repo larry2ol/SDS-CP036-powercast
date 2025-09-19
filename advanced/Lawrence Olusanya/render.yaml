@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: timeseries-api
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    autoDeploy: true
