@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # 🔴 PowerCast – Advanced Track
 
 ## ✅ Week 1: Setup & Exploratory Data Analysis (EDA)
@@ -8,6 +8,7 @@
 ### 🧭 1. Time Consistency & Structure
 
 Q: Are there any missing or irregular timestamps in the dataset? How did you verify consistency?
+
 
 Q: What is the sampling frequency and are all records spaced consistently?
 
@@ -22,7 +23,6 @@ Q: What daily or weekly patterns are observable in power consumption across the 
 Q: Are there seasonal or time-of-day peaks and dips in energy usage?
 
 Q: Which visualizations helped you uncover these patterns?
-
 ---
 
 ### 🌦️ 3. Environmental Feature Relationships
@@ -49,7 +49,7 @@ Q: What lag intervals appeared most relevant and why?
 
 Q: Did you detect any outliers in the weather or consumption readings?
 
-Q: How did you identify and treat these anomalies? 
+Q: How did you identify and treat these anomalies?
 
 Q: What might be the impact of retaining or removing them in your model?
 
@@ -78,7 +78,6 @@ Q: What daily or weekly patterns are observable in power consumption across the 
 Q: Are there seasonal or time-of-day peaks and dips in energy usage?
 
 Q: Which visualizations helped you uncover these patterns?
-
 ---
 
 ### 🌦️ 3. Environmental Feature Relationships
@@ -98,6 +97,7 @@ Q: Did you observe any lagged effects where past weather conditions predict curr
 Q: How did you analyze lag (e.g., shifting features, plotting lag correlation)?
 
 Q: What lag intervals appeared most relevant and why?
+
 
 ---
 
