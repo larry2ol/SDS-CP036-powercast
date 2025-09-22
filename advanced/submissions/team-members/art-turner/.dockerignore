@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation and outputs
+*.md
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.txt
+!requirements.txt
+
+# Model outputs (except essential files)
+*.log
+mlruns/
+outputs/
+*.csv
+
+# Keep only essential model files
+!*.pkl
+!*.json
+!advanced_models.py
+!week2_feature_engineering_fixed.py
