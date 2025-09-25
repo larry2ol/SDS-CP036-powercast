@@ -1,0 +1,53 @@
+{
+  "feature_cols": [
+    "Temperature",
+    "Humidity",
+    "Wind Speed",
+    "general diffuse flows",
+    "diffuse flows",
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "month_sin",
+    "month_cos"
+  ],
+  "target_cols": [
+    "Zone 1 Power Consumption",
+    "Zone 2  Power Consumption",
+    "Zone 3  Power Consumption"
+  ],
+  "env_features": [
+    "Temperature",
+    "Humidity",
+    "Wind Speed",
+    "general diffuse flows",
+    "diffuse flows"
+  ],
+  "cyclical_features": [
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "month_sin",
+    "month_cos"
+  ],
+  "lookback_window": 36,
+  "batch_size": 64,
+  "train_size": 36655,
+  "val_size": 7826,
+  "test_size": 7827,
+  "original_dataset_size": 52416,
+  "train_date_range": [
+    "2017-01-01 00:00:00",
+    "2017-09-12 19:00:00"
+  ],
+  "val_date_range": [
+    "2017-09-12 19:10:00",
+    "2017-11-06 09:20:00"
+  ],
+  "test_date_range": [
+    "2017-11-06 09:30:00",
+    "2017-12-30 23:50:00"
+  ]
+}
